@@ -22,6 +22,12 @@ set(ROCKSDB_GIT_URL "https://github.com/facebook/rocksdb.git")
 set(NLOHMANN_JSON_GIT_URL "https://github.com/nlohmann/json.git")
 set(CPP_HTTPLIB_GIT_URL "https://github.com/yhirose/cpp-httplib.git")
 
+# # to avoid building unnecessary targets
+# set(WITH_BENCHMARK_TOOLS OFF)
+# set(WITH_TOOLS OFF)
+# set(WITH_TESTS OFF)
+# set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
 FetchContent_Declare(
   googletest
   GIT_REPOSITORY ${GTEST_GIT_URL}
@@ -46,19 +52,27 @@ FetchContent_Declare(
   GIT_TAG v0.15.3
 )
 
-FetchContent_MakeAvailable(googletest)
-FetchContent_MakeAvailable(rocksdb)
-FetchContent_MakeAvailable(nlohmann_json)
-FetchContent_MakeAvailable(cpp_httplib)
+# FetchContent_MakeAvailable(googletest)
+# FetchContent_MakeAvailable(rocksdb)
+
+# FetchContent_MakeAvailable(nlohmann_json)
+# FetchContent_MakeAvailable(cpp_httplib)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
+
+add_subdirectory(lib/cppSocket)
+
+target_include_directories(${PROJECT_NAME} PUBLIC lib/cppSocket/include)
+# Link libraries 
+target_link_libraries(${PROJECT_NAME} PUBLIC SocketWrapper) 
+
 #OpenMP
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(${PROJECT_NAME} INTERFACE OpenMP::OpenMP_CXX)
+    target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
 else()
     message(FATAL_ERROR "OpenMP not found")
 endif()
@@ -69,8 +83,8 @@ if (RUN_TESTS EQUAL 1 OR RUN_COVERAGE EQUAL 1)
 
     # Link Google Test to the test executable
     add_executable(unit_tests ${TEST_SOURCES})
-    target_link_libraries(unit_tests gtest_main gmock_main)
     target_include_directories(unit_tests PUBLIC ${gtest_SOURCE_DIR}/include ${gmock_SOURCE_DIR}/include)
+    target_link_libraries(unit_tests gtest_main gmock_main)
 
     # Add the tests to be run by CTest
     include(GoogleTest)

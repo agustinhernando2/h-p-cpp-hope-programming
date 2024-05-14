@@ -46,3 +46,7 @@
 
 # Dont track sonnar files
 .scannerwork/
+
+#submodules
+/lib/
+
