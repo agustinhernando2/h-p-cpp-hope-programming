@@ -4,7 +4,7 @@ project(
   "HPCPP"
   VERSION 1.0.0
   DESCRIPTION "High Performance C++"
-  LANGUAGES CXX 
+  LANGUAGES CXX C
 )
 
 include(CTest)
@@ -21,6 +21,7 @@ set(GTEST_GIT_URL "https://github.com/google/googletest.git")
 set(ROCKSDB_GIT_URL "https://github.com/facebook/rocksdb.git")
 set(NLOHMANN_JSON_GIT_URL "https://github.com/nlohmann/json.git")
 set(CPP_HTTPLIB_GIT_URL "https://github.com/yhirose/cpp-httplib.git")
+set(CJSON_GIT_URL "https://github.com/DaveGamble/cJSON.git")
 
 # # to avoid building unnecessary targets
 # set(WITH_BENCHMARK_TOOLS OFF)
@@ -52,30 +53,30 @@ FetchContent_Declare(
   GIT_TAG v0.15.3
 )
 
+FetchContent_Declare(
+  cJSON
+  GIT_REPOSITORY ${CJSON_GIT_URL}
+  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/cJSON
+  UPDATE_COMMAND ""
+)
+
+# FetchContent_MakeAvailable(cJSON)
 # FetchContent_MakeAvailable(googletest)
 # FetchContent_MakeAvailable(rocksdb)
-
 # FetchContent_MakeAvailable(nlohmann_json)
 # FetchContent_MakeAvailable(cpp_httplib)
 
-file(GLOB_RECURSE SOURCES "src/*.cpp")
-
-add_executable(${PROJECT_NAME} ${SOURCES})
 
 
+# Compile the libraries
+add_subdirectory(lib/libdyn)
+add_subdirectory(lib/libsta)
+add_subdirectory(src/client)
+add_subdirectory(src/server)
+add_subdirectory(external)
 add_subdirectory(lib/cppSocket)
 
-target_include_directories(${PROJECT_NAME} PUBLIC lib/cppSocket/include)
-# Link libraries 
-target_link_libraries(${PROJECT_NAME} PUBLIC SocketWrapper) 
 
-#OpenMP
-find_package(OpenMP)
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
-else()
-    message(FATAL_ERROR "OpenMP not found")
-endif()
 
 
 if (RUN_TESTS EQUAL 1 OR RUN_COVERAGE EQUAL 1)

@@ -1,0 +1,21 @@
+{
+	"alerts":	{
+		"NORTH":	74,
+		"EAST":	70,
+		"WEST":	70,
+		"SOUTH":	65
+	},
+	"supplies":	{
+		"food":	{
+			"vegetables":	200
+		},
+		"medicine":	{
+			"antibiotics":	1,
+			"analgesics":	100
+		}
+	},
+	"emergency":	{
+		"last_keepalived":	"Sun May 12 22:18:48",
+		"last_event":	"Sun May 12 22:18:48, Server failure. Emergency notification sent to all connected clients."
+	}
+}
