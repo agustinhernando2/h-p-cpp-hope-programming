@@ -48,7 +48,13 @@
 .scannerwork/
 
 #submodules
-/lib/
+#/lib/
+lib/cppSocket
 
 *.tif
 *.db
+/img/sobelDirection.png
+/img/sobelMagnitude.png
+/img/maxsupress.png
+/img/gauss.png
+/img/canny.png
