@@ -1,9 +1,6 @@
 # Configure the client project
 project(client)
 
-# Add header
-include_directories(../../include)
-
 # Create the executable
 add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/client.c)
 
@@ -14,3 +11,4 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..
 
 # Link libraries StatiCLib, DynamiCLib, and cJSON
 target_link_libraries(${PROJECT_NAME} StatiCLib DynamiCLib cJSON)  
+
