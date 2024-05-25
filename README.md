@@ -225,3 +225,34 @@ int main(int argc, char *argv[]) {
 </details>
 
 - **RESTful API with [Ulfius](https://github.com/babelouest/ulfius)**: Clients are implemented using the Ulfius framework to make RESTful requests, enabling efficient communication with the central server.
+
+
+'''c
+#include <omp.h>
+#include <chrono>
+
+int main(int argc, char const *argv[])
+{
+    int numThreads = 1;
+    // get the number of threads from argv
+    if (argc > 1)
+    {
+        numThreads = atoi(argv[1]);
+    }
+    omp_set_num_threads(numThreads);
+
+    EdgeDetection edgeDetection(40.0, 80.0, 1.0);
+
+    // call the cannyEdgeDetection function
+    auto start = std::chrono::high_resolution_clock::now();
+    
+    edgeDetection.cannyEdgeDetection("img/sentinel2.tif", "output.jpg");
+    
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = end - start;
+    
+    std::cout << "Tiempo de ejecución: " << elapsed.count() << " ms\n";
+    return 0;
+}
+
+'''

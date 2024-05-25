@@ -50,3 +50,5 @@
 #submodules
 /lib/
 
+*.tif
+*.db

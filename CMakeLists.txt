@@ -12,6 +12,7 @@ set(CMAKE_C_FLAGS "-Wall -pedantic -Werror -Wextra -Wconversion -std=gnu11")
 
 # Opciones de configuración
 #set(FETCHCONTENT_BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
+
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake" ${CMAKE_MODULE_PATH})
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -65,7 +66,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cJSON)
 
-#RocksDB
+# Agregar el path a gflags
+set(CMAKE_PREFIX_PATH "/usr/lib/x86_64-linux-gnu/cmake/gflags" ${CMAKE_PREFIX_PATH})
+
+# RocksDB
 # find_package(RocksDB)
 # if(ROCKSDB_FOUND)
 #     set(ROCKSDB_LIB RocksDB::rocksdb)
@@ -133,18 +137,18 @@ else()
 endif()
 
 # cpp_httplib
-#if (cpp_httplib_POPULATED)
-#     include_directories(${cpp_httplib_SOURCE_DIR})
-# else()
-#     message(FATAL_ERROR "cpp_httplib not found")
-# endif()
+if (cpp_httplib_POPULATED)
+    include_directories(${cpp_httplib_SOURCE_DIR})
+else()
+    message(FATAL_ERROR "cpp_httplib not found")
+endif()
 
 include_directories(include)
-# include_directories(${CMAKE_SOURCE_DIR}/lib/rocksDbWrapper/include) 
-include_directories(${CMAKE_SOURCE_DIR}/lib/cannyEdgeFilter/include) 
+include_directories(${CMAKE_SOURCE_DIR}/lib/rocksDbWrapper/include) 
 
 # Compile the libraries
-# add_subdirectory(lib/rocksDbWrapper)
+# add_subdirectory(${rocksdb_SOURCE_DIR} ${rocksdb_BINARY_DIR})
+add_subdirectory(lib/rocksDbWrapper)
 add_subdirectory(lib/cannyEdgeFilter)
 add_subdirectory(lib/libdyn)
 add_subdirectory(lib/libsta)

@@ -2,13 +2,22 @@
 project(client)
 
 # Create the executable
-add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/client.c)
+add_executable(${PROJECT_NAME} client.cpp)
 
 # Include directories for libraries and cJSON
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../lib/libdyn/include)
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../lib/libsta/include)
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../external/cJSON)
+# target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../lib/libdyn/include)
+# target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../lib/libsta/include)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../lib/cppSocket/include)
 
-# Link libraries StatiCLib, DynamiCLib, and cJSON
-target_link_libraries(${PROJECT_NAME} StatiCLib DynamiCLib cJSON)  
-
+# Link libraries 
+target_link_libraries(${PROJECT_NAME}
+    SocketWrapper
+    # cJSON
+    nlohmann_json::nlohmann_json
+    # rocksDBWrapper
+    # cannyEdge
+    zip
+    # OpenMP::OpenMP_CXX
+    # DynamiCLib
+    # StatiCLib
+)
