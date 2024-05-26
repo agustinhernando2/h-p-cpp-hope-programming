@@ -227,7 +227,7 @@ int main(int argc, char *argv[]) {
 - **RESTful API with [Ulfius](https://github.com/babelouest/ulfius)**: Clients are implemented using the Ulfius framework to make RESTful requests, enabling efficient communication with the central server.
 
 
-'''c
+```c
 #include <omp.h>
 #include <chrono>
 
@@ -255,4 +255,4 @@ int main(int argc, char const *argv[])
     return 0;
 }
 
-'''
+```

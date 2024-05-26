@@ -5,10 +5,12 @@ project(
 )
 
 # Create the executable
-add_executable(${PROJECT_NAME} server.cpp server.c)
+add_executable(${PROJECT_NAME} server.cpp)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../lib/cppSocket/include)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../lib/cannyEdgeFilter/include)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../lib/libsta/include)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../lib/libdyn/include)
 
 # Link libraries 
 target_link_libraries(${PROJECT_NAME}

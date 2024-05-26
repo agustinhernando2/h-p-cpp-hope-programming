@@ -11,8 +11,6 @@ project(
 set(CMAKE_C_FLAGS "-Wall -pedantic -Werror -Wextra -Wconversion -std=gnu11")
 
 # Opciones de configuración
-#set(FETCHCONTENT_BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
-
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake" ${CMAKE_MODULE_PATH})
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -68,23 +66,6 @@ FetchContent_MakeAvailable(cJSON)
 
 # Agregar el path a gflags
 set(CMAKE_PREFIX_PATH "/usr/lib/x86_64-linux-gnu/cmake/gflags" ${CMAKE_PREFIX_PATH})
-
-# RocksDB
-# find_package(RocksDB)
-# if(ROCKSDB_FOUND)
-#     set(ROCKSDB_LIB RocksDB::rocksdb)
-# else()
-#     message(STATUS "RocksDB not found in the system, fetching from GitHub")
-#     FetchContent_Declare(
-#     rocksdb
-#     GIT_REPOSITORY ${ROCKSDB_GIT_URL}
-#     GIT_TAG v6.22.1
-#     CMAKE_ARGS -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DPORTABLE=OFF -DROCKSDB_CMAKE_CXX_FLAGS="-O2"
-#     )
-
-#     FetchContent_MakeAvailable(rocksdb)
-#     set(ROCKSDB_LIB Rocksdb::Rocksdb)
-# endif()
 
 #OpenMP
 find_package(OpenMP)
@@ -147,7 +128,6 @@ include_directories(include)
 include_directories(${CMAKE_SOURCE_DIR}/lib/rocksDbWrapper/include) 
 
 # Compile the libraries
-# add_subdirectory(${rocksdb_SOURCE_DIR} ${rocksdb_BINARY_DIR})
 add_subdirectory(lib/rocksDbWrapper)
 add_subdirectory(lib/cannyEdgeFilter)
 add_subdirectory(lib/libdyn)

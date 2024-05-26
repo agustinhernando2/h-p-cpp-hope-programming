@@ -2,19 +2,23 @@
 #include <server.hpp>
 
 
+using namespace std::chrono_literals;
+
 int main() {
-
+    start_db();
     std::vector<std::jthread> serverThreads;    
-    // HTTP
-    
-    // Iniciar el servidor IPv4 en el puerto 8080   
-    serverThreads.emplace_back([] { run_server(false, "8080"); });
+    // Start servers for IPv4
+    std::cout << "Server IPv4 TCP listening: " << localhost_ipv4 << ":" << tcp4_port << std::endl;
+    serverThreads.emplace_back([] { run_server(localhost_ipv4, tcp4_port, TCP); });
 
-    // Iniciar el servidor IPv6 en el puerto 8081
-    serverThreads.emplace_back([] { run_server(true, "8081"); });
+    // Start servers for IPv6
+    std::cout << "Server IPv6 TCP listening: " << localhost_ipv6 << ":" << tcp6_port << std::endl;
+    serverThreads.emplace_back([] { run_server(localhost_ipv6, tcp6_port, TCP); });
+
+    // Start HTTP server
     serverThreads.emplace_back([] { start_http_server(); });
 
-    // Esperar indefinidamente (o hasta que se interrumpa el programa)
+    // Wait for all threads to finish
     for (auto& thread : serverThreads) {
         if (thread.joinable()) {
             thread.join();
@@ -24,19 +28,9 @@ int main() {
     return 0;
 }
 
-int run_server(bool is_ipv6, std::string port){
-    std::unique_ptr<IConnection> server;
-    std::string address;
-    std::string type = is_ipv6 ? IPV6_ : IPV4_;
-    //auto server ;
-    if(is_ipv6){
-        server = createConnection("::1", port, true, TCP);
-    }else{
-        server = createConnection("127.0.0.1", port, true, TCP);
-    }
+int run_server(std::string address, std::string port, int protocol){
+    std::unique_ptr<IConnection> server = createConnection(address, port, true, protocol);
     if (server->bind()) {
-        std::cout << "Server " << type << " listening: " << address << ":" << port << std::endl;
-        
         // Espera por conexiones
         while (true) {
             // Acepta una nueva conexión
@@ -46,7 +40,6 @@ int run_server(bool is_ipv6, std::string port){
                 std::cerr << "Accept error." << std::endl;
                 continue;
             }
-            
             std::cout << "Connection accepted. Waiting for messages from the client..." << std::endl;
 
             // Maneja la conexión del cliente en un hilo separado
@@ -54,167 +47,220 @@ int run_server(bool is_ipv6, std::string port){
             clientThread.detach(); // Liberar el hilo para que pueda ejecutarse de manera independiente
         }
     } else {
-        std::cerr << "Server binding error " << type << ", " << address << ":" << port << std::endl;
         return 1;
     }
 
     return 0;
 }
 
-bool authentication(std::string username, std::string password) {
-    // Verifica las credenciales del username
-    std::cout << username << " " << password << std::endl;
-    // Comparación de strings usando el operador ==
-    if(check_json_users(username,password,"data/users.json")==true){
-        return true;
-    }else{
-        return false;
-    }
-}
-bool check_json_users(const std::string& username, const std::string& password, const std::string& path){
-    std::ifstream archivo(path);
-    if (!archivo.is_open()) {
-        std::cerr << "No se puede abrir el archivo " << path << std::endl;
-        return false;
-    }
-
-    nlohmann::json j;
-    archivo >> j;
-
-    for (const auto& item : j["usernames"]) {
-        if (item["username"] == username && item["contraseña"] == password) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 void handleClient(IConnection* server, int clientFd) {
-    // Maneja la conexión con el cliente
-    while (true) {
-        // Recibe datos del cliente
-        try {
+    // Internal client to access the HTTP server
+    httplib::Client icli(localhost_ipv4, http_port);
 
-            //autenticacion
-            server->sendto("¡Hola cliente! Ingrese su username ",clientFd);
-            std::string username = server->receiveFrom(clientFd);
-            std::cout << "Username: " << username << std::endl;
-            // server->send("¡Hola cliente! Ingrese password ");
-            // std::string password = server->receive();
-            sleep(1000);
-            // if (authentication(username, password) == false) {
-            //     server->sendto("username o contraseña incorrectos", clientFd);
-            //     close(clientFd);
-            //     break;
-            // }else{
-            //     handler_principal(server, clientFd, username);
-            // }
-        } catch (const std::runtime_error& e) {
-            std::cerr << "Error: " << e.what() << std::endl;
-            break; 
+    std::string message;
+    std::string status;
+    try {
+        while (true) {
+            // Recibe un mensaje del cliente
+            message = server->receiveFrom(clientFd);
+            
+            std::cout << "PID: " << getpid() << std::endl; 
+            std::cout << "Message received: " << message << std::endl;
+            std::this_thread::sleep_for(500ms);
+
+            httplib::Result res;
+            switch (get_command(message))
+            {
+            case 1:
+                std::cout << "Getting supplies..." << std::endl;
+                res = icli.Get("/supplies");
+                status = res->status;
+                message = res->body;
+                if(message.empty() || status == "404"){
+                    message = "No supplies found";
+                }
+                server->sendto(message,clientFd);
+                break;
+            case 2:
+                std::cout << "Setting supplies..." << std::endl;
+                res = icli.Post("/setsupplies",message, "application/json");
+                status = res->status;
+                message = res->body;
+                if(message.empty() || status == "404"){
+                    message = "No supplies found";
+                }
+                server->sendto(message,clientFd);
+                break;
+
+            case 3:
+                //CANNY EDGE FILTER
+                std::cout << "Canny edge filter ..." << std::endl;
+                std::this_thread::sleep_for(1s);
+                break;
+            case 4:
+                end_conn();
+                break;
+            default:
+                fprintf(stdout, "Command error\n");
+                break;
+            };
+
+                
         }
+    } catch (const std::runtime_error& e) {
+        std::cerr << "Error: " << e.what() << std::endl; 
     }
     
     close(clientFd);
 }
 
-void handler_principal(IConnection* server, int clientFd, std::string user){
-    while(true){
-        try{
-            server->sendto("Menu:\n1. Recibir resumen.\n2. Ingresar datos.\n3. Escanear imagen.\n4. Salir.\n", clientFd);
-            std::string rta = server->receiveFrom(clientFd);
-            switch (std::stoi(rta)) {
-                case 1:
-                    // Code for receiving summary
-                    //server->sendto("Sim  summary\n", clientFd);
-                    server->sendto(get_supplies(),clientFd);
-                    break;
-                case 2:
-                    // Code for entering data
-                    //server->sendto("Sim supply\n", clientFd);
-                    supplies_data(server, clientFd, user);
-                    break;
-                case 3:
-                    // Code for scanning image
-                    server->sendto("Sim image\n", clientFd);
-                    break;
-                case 4:
-                    // Code for exiting
-                    server->sendto("Sim exit\n", clientFd);
-                    break;
-                default:
-                    // Code for handling invalid input
-                    server->sendto("Sim invalid", clientFd);
-                    break;
-            }
-        }catch (const std::runtime_error& e) {
-            std::cerr << "Error al recibir datos del cliente: " << e.what() << std::endl;
-            break; // Salir del bucle interno si ocurre un error al recibir datos
+// Datos JSON
+const std::string json_data = R"(
+{
+    "alerts": {
+        "NORTH": 74,
+        "EAST": 70,
+        "WEST": 70,
+        "SOUTH": 65
+    },
+    "supplies": {
+        "food": {
+            "vegetables": 200,
+            "fruits": 200,
+            "grains": 200,
+            "meat": 200
+        },
+        "medicine": {
+            "antibiotics": 1,
+            "analgesics": 100,
+            "antipyretics": 100,
+            "antihistamines": 100
         }
+    },
+    "emergency": {
+        "last_keepalived": "Sun May 12 22:18:48",
+        "last_event": "Sun May 12 22:18:48, Server failure. Emergency notification sent to all connected clients."
+    }
+}
+)";
+
+void start_db() {
+    std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>("data/database.db");
+
+    try
+    {
+        // JSON parser
+        nlohmann::json data = nlohmann::json::parse(json_data);
+
+        // Insert
+        db->put("alerts", data["alerts"].dump());
+        db->put(SUPPLIES_KEY, data[SUPPLIES_KEY].dump());
+        db->put("emergency", data["emergency"].dump());
+
+        std::cout << "Database inicialized." << std::endl;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
     }
     
 }
 
-std::string read_file(const std::string &path) {
-    std::ifstream file(path);
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    return buffer.str();
+int get_command(std::string message){
+    nlohmann::json j = nlohmann::json::parse(message);
+    std::string command = j["command"];
+    if(command == option1.command){
+        return 1;
+    }else if(command == option2.command){
+        return 2;
+    }else if(command == option3.command){
+        return 3;
+    }else if(command == option4.command){
+        return 4;
+    }else{
+        return 0;
+    }
 }
-
+void end_conn()
+{
+    std::cout << "Ending connection..." << std::endl;
+    std::this_thread::sleep_for(2s);
+    exit(EXIT_SUCCESS);
+}
 void start_http_server() {
-    httplib::Server server;
+    httplib::Server srv;
 
-    server.Get("/hi", [](const httplib::Request &, httplib::Response &res) {
+    srv.Get("/hi", [](const httplib::Request &, httplib::Response &res) {
         res.set_content("Hello World!", "text/plain");
     });
 
-    server.Get("/supplies", [](const httplib::Request &, httplib::Response &res) {
-        std::string file_path = "data/state_summary.json";
-        std::string content = read_file(file_path);
-        if (!content.empty()) {
-            res.set_content(content, "application/json");
+    srv.Get("/supplies", [](const httplib::Request &, httplib::Response &res) {
+        std::cout << "GET /supplies" << std::endl;
+
+        std::string supplies = get_supplies();
+
+        if (!supplies.empty()) {
+            res.set_content(supplies, "application/json");
         } else {
             res.status = 404;
             res.set_content("File not found", "text/plain");
         }
     });
 
-    std::cout << "Servidor HTTP escuchando en el puerto 8082" << std::endl;
-    server.listen("0.0.0.0", 8082);
-}
+    srv.Get("/database", [](const httplib::Request &, httplib::Response &res) {
+        std::cout << "GET /database" << std::endl;
 
-std::string get_supplies(){
-    httplib::Client cli("http://localhost:8082");
+        std::string result;
+        std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>("data/database.db");
+        nlohmann::json j;
 
-    auto res = cli.Get("/supplies");
-    if (res) {
-        //std::cout << "Status code: " << res->status << std::endl;
-        //std::cout << "Response body: " << res->body << std::endl;
-        return res->body;
-    } else {
-        std::cout << "Error: " << res.error() << std::endl;
-        return "error";
-    }
-}
+        // Insert
+        db->get("alerts", result);
+        j["alerts"] = nlohmann::json::parse(result);
 
-void supplies_data(IConnection* server, int clientFd, std::string user){
-    nlohmann::json j;
-    std::string key;
-    std::string value;
-    j["hostname"] = user;
-    while(true){
-        server->sendto("Ingrese la clave del articulo o 'fin' si desea salir: ", clientFd);
-        std::string key = server->receiveFrom(clientFd);
-        if(key == "fin"){
-            break;
+        db->get(SUPPLIES_KEY, result);
+        j[SUPPLIES_KEY] = nlohmann::json::parse(result);
+        
+        db->get("emergency", result);
+        j["emergency"] = nlohmann::json::parse(result);
+
+        result = j.dump(4);
+
+        if (!result.empty()) {
+            res.set_content(result, "application/json");
+        } else {
+            res.status = 404;
+            res.set_content("File not found", "text/plain");
         }
-        server->sendto("Ingrese el valor del articulo: ", clientFd);
-        std::string value = server->receiveFrom(clientFd);
-        j[key] = std::atoi(value.c_str());
-    }
+    });
 
-    std::string jsonString = j.dump();
-    std::cout<< "JSON FORMADO: "<<jsonString<<std::endl;
+    srv.Get("/alert", [](const httplib::Request &, httplib::Response &res) {
+
+        std::cout << "GET /alert" << std::endl;
+             
+        // if (!content.empty()) {
+        if (1) {
+            res.set_content("content", "application/json");
+        } else {
+            res.status = 404;
+            res.set_content("File not found", "text/plain");
+        }
+    });
+
+    srv.Post("/setsupplies", [](const httplib::Request &req, httplib::Response &res) {
+        std::cout << "POST /setsupplies" << std::endl;
+
+        nlohmann::json j = nlohmann::json::parse(req.body);
+        if(j.empty()){
+            res.status = 404;
+            res.set_content("File not found", "text/plain");
+        }else{
+            set_supply(req.body);
+            std::string supplie_added = "Supply added\n...\n" + j.dump(4);
+            res.set_content(supplie_added, "application/json");
+        }
+    });
+
+    // listen all interfaces
+    srv.listen(localhost_ipv4, http_port);
 }

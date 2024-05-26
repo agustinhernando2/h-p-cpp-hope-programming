@@ -6,7 +6,7 @@ project(
   "StatiCLib"
   VERSION 1.0.0
   DESCRIPTION "CMake C project template for operating systems II"
-  LANGUAGES C
+  LANGUAGES C CXX
 )
 
 set(CMAKE_C_STANDARD 17)
@@ -18,7 +18,7 @@ include_directories(../../external/cJSON)
 include_directories(include)
 
 # Add the src directory, where the source files are located
-file(GLOB SOURCES "src/*.c")
+file(GLOB SOURCES "src/*.c" "src/*.cpp")
 
 # Add cJSON source files
 file(GLOB cJSON_SOURCES "../../external/cJSON/*.c")
@@ -27,4 +27,8 @@ file(GLOB cJSON_SOURCES "../../external/cJSON/*.c")
 add_library(${PROJECT_NAME} STATIC ${SOURCES} ${cJSON_SOURCES})
 
 # Link cJSON library to StatiCLib
-target_link_libraries(${PROJECT_NAME} PUBLIC cJSON)
+target_link_libraries(${PROJECT_NAME} PUBLIC 
+  rocksDBWrapper
+  cJSON 
+  nlohmann_json::nlohmann_json
+  )
