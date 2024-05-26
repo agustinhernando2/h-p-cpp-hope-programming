@@ -17,8 +17,8 @@
 #define SOUTH_ENTRY "SOUTH"
 
 // temperature range
-#define MIN_TEMPERATURE 16
-#define MAX_TEMPERATURE 38
+#define MIN_TEMPERATURE 40
+#define MAX_TEMPERATURE 50
 #define HIGH_TEMPERATURE 38
 #define BUFFER_SIZE_QMS 512
 #define BUFFER_SIZE_M 100
@@ -34,9 +34,13 @@
 #define JSON_FILE_PATH "data/state_summary.json"
 
 // message queue
-#define K_MSG "/bin/ls"
-extern int msg_id;
+#define K_MSG "build"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern int msg_id;
 typedef struct
 {
     long mtype;
@@ -50,12 +54,31 @@ typedef struct
     double temperature;
 } str_temp;
 
+/*
+* @brief Initializes the message queue
+*/
+int create_message_queue();
+
+/**
+ * @brief Get the temperature
+*/
 double get_temperature();
 
+/**
+ * @brief Simulate each temperature sensor
+*/
 void simulate_temperature_sensor(char *entry);
 
+/**
+ * @brief Run the alert module
+*/
 void run_alert_module();
 
-void send_alert_msqueue(char *send_buffer);
+/**
+ * @brief Send the alert to the message queue
+*/
+void send_alert_msqueue(mess_t *send_buffer);
 
-int add_entry_to_json(char *entry);
+#ifdef __cplusplus
+}
+#endif

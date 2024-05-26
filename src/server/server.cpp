@@ -5,7 +5,9 @@
 using namespace std::chrono_literals;
 
 int main() {
-    start_db();
+    // start_db();
+    // Create message queue
+
     std::vector<std::jthread> serverThreads;    
     // Start servers for IPv4
     std::cout << "Server IPv4 TCP listening: " << localhost_ipv4 << ":" << tcp4_port << std::endl;
@@ -18,6 +20,11 @@ int main() {
     // Start HTTP server
     serverThreads.emplace_back([] { start_http_server(); });
 
+    // Start Alert Module
+    serverThreads.emplace_back([] { run_alert_module(); });
+    // Start Listener alert module
+    serverThreads.emplace_back([] { alert_listener(); });
+
     // Wait for all threads to finish
     for (auto& thread : serverThreads) {
         if (thread.joinable()) {
@@ -26,6 +33,51 @@ int main() {
     }
 
     return 0;
+}
+
+void alert_listener() {
+    mess_t send_buffer;
+
+    while (true) {
+        if (msgrcv(msg_id, &send_buffer, sizeof(send_buffer), 1, 0) == -1) {
+            // print errno
+            perror("msgrcv error");
+            using namespace std::chrono_literals;
+            std::this_thread::sleep_for(1s);
+            continue;
+        }
+
+        std::cout << "Alert received: " << send_buffer.message << std::endl;
+
+        try {
+            // Open db
+            std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>("data/database.db");
+
+            // Parse alert received
+            nlohmann::json alert_received = nlohmann::json::parse(send_buffer.message);
+
+            // Get alert location
+            std::string location = alert_received["location"].get<std::string>();
+            std::string alerts;
+
+            // Get alerts from db
+            db->get(K_ALERTS, alerts);
+
+            // check if alerts is empty
+            if (alerts.empty()) {
+                alerts = "{}";
+            }
+
+            nlohmann::json alerts_in_db = nlohmann::json::parse(alerts);
+
+            alerts_in_db[location] = alerts_in_db[location].get<int>() + 1;
+
+            // update
+            db->put(K_ALERTS, alerts_in_db.dump());
+        } catch (const std::exception& e) {
+            std::cerr << "Error processing alert: " << e.what() << std::endl;
+        }
+    }
 }
 
 int run_server(std::string address, std::string port, int protocol){
@@ -43,7 +95,7 @@ int run_server(std::string address, std::string port, int protocol){
             std::cout << "Connection accepted. Waiting for messages from the client..." << std::endl;
 
             // Maneja la conexión del cliente en un hilo separado
-            std::jthread clientThread(handleClient, server.get(), clientFd); // Pasamos el puntero subyacente con get()
+            std::jthread clientThread(handle_client, server.get(), clientFd); // Pasamos el puntero subyacente con get()
             clientThread.detach(); // Liberar el hilo para que pueda ejecutarse de manera independiente
         }
     } else {
@@ -53,7 +105,7 @@ int run_server(std::string address, std::string port, int protocol){
     return 0;
 }
 
-void handleClient(IConnection* server, int clientFd) {
+void handle_client(IConnection* server, int clientFd) {
     // Internal client to access the HTTP server
     httplib::Client icli(localhost_ipv4, http_port);
 
@@ -153,7 +205,7 @@ void start_db() {
         nlohmann::json data = nlohmann::json::parse(json_data);
 
         // Insert
-        db->put("alerts", data["alerts"].dump());
+        db->put(K_ALERTS, data[K_ALERTS].dump());
         db->put(SUPPLIES_KEY, data[SUPPLIES_KEY].dump());
         db->put("emergency", data["emergency"].dump());
 
@@ -215,8 +267,8 @@ void start_http_server() {
         nlohmann::json j;
 
         // Insert
-        db->get("alerts", result);
-        j["alerts"] = nlohmann::json::parse(result);
+        db->get(K_ALERTS, result);
+        j[K_ALERTS] = nlohmann::json::parse(result);
 
         db->get(SUPPLIES_KEY, result);
         j[SUPPLIES_KEY] = nlohmann::json::parse(result);
@@ -238,9 +290,18 @@ void start_http_server() {
 
         std::cout << "GET /alert" << std::endl;
              
-        // if (!content.empty()) {
+        std::string alerts;
+        std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>("data/database.db");
+        nlohmann::json j;
+
+        // Get alerts
+        db->get(K_ALERTS, alerts);
+        j[K_ALERTS] = nlohmann::json::parse(alerts);
+        // Format the json
+        alerts = j[K_ALERTS].dump(4);
+
         if (1) {
-            res.set_content("content", "application/json");
+            res.set_content(alerts, "application/json");
         } else {
             res.status = 404;
             res.set_content("File not found", "text/plain");
