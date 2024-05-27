@@ -5,7 +5,6 @@ int main(int argc, char const* argv[])
     std::signal(SIGINT, signal_handler);   // SIGINT (Ctrl+C)
     std::signal(SIGTSTP, signal_handler);  // SIGTSTP (Ctrl+Z)
     std::signal(SIGTERM, signal_handler);  // SIGTERM
-
     std::unique_ptr<IConnection> con;
     std::string response;
     int serverSocket = 0;
@@ -15,8 +14,8 @@ int main(int argc, char const* argv[])
 
     if (argc < 3)
     {
-        std::cerr << "Uso: " << argv[0] << " <host> IPV\n";
-        std::cerr << "Example: " << argv[0] << " localhost is_ipv4\n";
+        std::cerr << "Uso: " << argv[0] << " <host> IPv4\n";
+        std::cerr << "Example: " << argv[0] << " localhost 1\n";
         std::exit(EXIT_SUCCESS);
     }
 
@@ -30,9 +29,7 @@ int main(int argc, char const* argv[])
     // get ip version4 true / false
     is_ip_version_4 = std::atoi(argv[2]);
     std::string address = (is_ip_version_4) ? localhost_ipv4 : localhost_ipv6;
-    std::string port = (is_ip_version_4) ? 
-        (connection_type == TCP) ? tcp4_port : udp4_port : 
-        (connection_type == TCP) ? tcp6_port : udp6_port;
+    std::string port = (is_ip_version_4) ? tcp4_port : tcp6_port;
 
     std::cout << "Connecting to " << address << ":" << port << std::endl;
 

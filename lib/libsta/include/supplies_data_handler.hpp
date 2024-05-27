@@ -9,6 +9,7 @@ const std::string SUPPLY_NAME_KEY = "supply_name";
 const std::string SUPPLY_AMOUNT_KEY = "supply_amount";
 const std::string SUPPLY_TYPE_KEY = "supply_type";
 
+extern const std::string rockdb_path;
 /*
 * This function sets a new supply in the database
 * @param command: the command received from the client

@@ -1,12 +1,12 @@
 
 #include <server.hpp>
 
-
 using namespace std::chrono_literals;
 
 int main() {
     // start_db();
-    // Create message queue
+
+    std::signal(SIGTERM, signal_handler);  // SIGTERM
 
     std::vector<std::jthread> serverThreads;    
     // Start servers for IPv4
@@ -20,6 +20,8 @@ int main() {
     // Start HTTP server
     serverThreads.emplace_back([] { start_http_server(); });
 
+    // Start Emergency Module
+    serverThreads.emplace_back([] { run_emergency_module(); });
     // Start Alert Module
     serverThreads.emplace_back([] { run_alert_module(); });
     // Start Listener alert module
@@ -35,57 +37,11 @@ int main() {
     return 0;
 }
 
-void alert_listener() {
-    mess_t send_buffer;
-
-    while (true) {
-        if (msgrcv(msg_id, &send_buffer, sizeof(send_buffer), 1, 0) == -1) {
-            // print errno
-            perror("msgrcv error");
-            using namespace std::chrono_literals;
-            std::this_thread::sleep_for(1s);
-            continue;
-        }
-
-        std::cout << "Alert received: " << send_buffer.message << std::endl;
-
-        try {
-            // Open db
-            std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>("data/database.db");
-
-            // Parse alert received
-            nlohmann::json alert_received = nlohmann::json::parse(send_buffer.message);
-
-            // Get alert location
-            std::string location = alert_received["location"].get<std::string>();
-            std::string alerts;
-
-            // Get alerts from db
-            db->get(K_ALERTS, alerts);
-
-            // check if alerts is empty
-            if (alerts.empty()) {
-                alerts = "{}";
-            }
-
-            nlohmann::json alerts_in_db = nlohmann::json::parse(alerts);
-
-            alerts_in_db[location] = alerts_in_db[location].get<int>() + 1;
-
-            // update
-            db->put(K_ALERTS, alerts_in_db.dump());
-        } catch (const std::exception& e) {
-            std::cerr << "Error processing alert: " << e.what() << std::endl;
-        }
-    }
-}
-
 int run_server(std::string address, std::string port, int protocol){
     std::unique_ptr<IConnection> server = createConnection(address, port, true, protocol);
     if (server->bind()) {
-        // Espera por conexiones
         while (true) {
-            // Acepta una nueva conexión
+            // Accept connection
             int clientFd = server->connect();
 
             if (clientFd < 0) {
@@ -94,9 +50,9 @@ int run_server(std::string address, std::string port, int protocol){
             }
             std::cout << "Connection accepted. Waiting for messages from the client..." << std::endl;
 
-            // Maneja la conexión del cliente en un hilo separado
-            std::jthread clientThread(handle_client, server.get(), clientFd); // Pasamos el puntero subyacente con get()
-            clientThread.detach(); // Liberar el hilo para que pueda ejecutarse de manera independiente
+            // Manage the client in a new thread
+            std::jthread clientThread(handle_client, server.get(), clientFd); 
+            clientThread.detach(); // free the thread resources
         }
     } else {
         return 1;
@@ -106,6 +62,13 @@ int run_server(std::string address, std::string port, int protocol){
 }
 
 void handle_client(IConnection* server, int clientFd) {
+
+    std::signal(SIGINT, signal_handler);   // SIGINT
+
+    // Manage the client in a new thread
+    std::jthread emergency_listener(run_emergency_listener, clientFd); 
+    emergency_listener.detach(); // free the thread resources
+
     // Internal client to access the HTTP server
     httplib::Client icli(localhost_ipv4, http_port);
 
@@ -113,7 +76,11 @@ void handle_client(IConnection* server, int clientFd) {
     std::string status;
     try {
         while (true) {
-            // Recibe un mensaje del cliente
+            if (signal_end_conn)
+            {
+                end_conn(clientFd);
+            }
+            // Receive message from client
             message = server->receiveFrom(clientFd);
             
             std::cout << "PID: " << getpid() << std::endl; 
@@ -150,7 +117,7 @@ void handle_client(IConnection* server, int clientFd) {
                 std::this_thread::sleep_for(1s);
                 break;
             case 4:
-                end_conn();
+                end_conn(clientFd);
                 break;
             default:
                 fprintf(stdout, "Command error\n");
@@ -164,6 +131,101 @@ void handle_client(IConnection* server, int clientFd) {
     }
     
     close(clientFd);
+}
+
+void alert_listener() {
+    mess_t send_buffer;
+
+    while (true) {
+        if (msgrcv(msg_id, &send_buffer, sizeof(send_buffer), 1, 0) == -1) {
+            // print errno
+            perror("msgrcv error");
+            std::this_thread::sleep_for(1s);
+            continue;
+        }
+
+        std::cout << "Alert received: " << send_buffer.message << std::endl;
+
+        try {
+            // Open db
+            semaphore.acquire();
+            std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>("data/database.db");
+
+            // Parse alert received
+            nlohmann::json alert_received = nlohmann::json::parse(send_buffer.message);
+
+            // Get alert location
+            std::string location = alert_received["location"].get<std::string>();
+            std::string alerts;
+
+            // Get alerts from db
+            db->get(K_ALERTS, alerts);
+
+            // check if alerts is empty
+            if (alerts.empty()) {
+                alerts = "{}";
+            }
+
+            nlohmann::json alerts_in_db = nlohmann::json::parse(alerts);
+
+            alerts_in_db[location] = alerts_in_db[location].get<int>() + 1;
+
+            // update
+            db->put(K_ALERTS, alerts_in_db.dump());
+        } catch (const std::exception& e) {
+            std::cerr << "Error processing alert: " << e.what() << std::endl;
+        }
+        semaphore.release();
+    }
+}
+
+void run_emergency_listener(int clientFd) {
+    mess_t send_buffer;
+    while (true) {
+        if (msgrcv(msg_id, &send_buffer, sizeof(send_buffer), 2, 0) == -1) {
+            // print errno
+            perror("msgrcv error");
+            std::this_thread::sleep_for(1s);
+            continue;
+        }
+
+        std::cout << "Emergency received: " << send_buffer.message << std::endl;
+
+        try {
+            // Open db
+            semaphore.acquire();
+            std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>("data/database.db");
+
+            // Parse alert received
+            nlohmann::json emergency_received = nlohmann::json::parse(send_buffer.message);
+
+            // Get alert location
+            std::string last_keepalived = emergency_received[LAST_KEEP_ALIVED].get<std::string>();
+            std::string last_event = emergency_received[LAST_EVENT].get<std::string>();
+
+            // Get alerts from db
+            std::string emergency;
+            db->get(K_EMERGENCY, emergency);
+
+            // check if alerts is empty
+            if (emergency.empty()) {
+                emergency = "{}";
+            }
+
+            nlohmann::json emergency_in_db = nlohmann::json::parse(emergency);
+
+            emergency_in_db[LAST_KEEP_ALIVED] = last_keepalived;
+            emergency_in_db[LAST_EVENT] = last_event;
+
+            // update
+            db->put(K_EMERGENCY, emergency_in_db.dump());
+            // End connection and exit
+        } catch (const std::exception& e) {
+            std::cerr << "Error processing emergency: " << e.what() << std::endl;
+        }
+        semaphore.release();
+        end_conn(clientFd);
+    }
 }
 
 // Datos JSON
@@ -219,6 +281,7 @@ void start_db() {
 }
 
 int get_command(std::string message){
+
     nlohmann::json j = nlohmann::json::parse(message);
     std::string command = j["command"];
     if(command == option1.command){
@@ -233,9 +296,18 @@ int get_command(std::string message){
         return 0;
     }
 }
-void end_conn()
+
+void end_conn(int fd)
 {
     std::cout << "Ending connection..." << std::endl;
+    std::cout << "Sending end connection message..." << std::endl;
+    nlohmann::json j;
+    j["message"] = "Connection ended";
+    j["command"] = "end";
+    std::string message = j.dump();
+    // Send end connection message
+    send(fd, message.c_str(), message.size(), 0);
+    
     std::this_thread::sleep_for(2s);
     exit(EXIT_SUCCESS);
 }
@@ -243,6 +315,7 @@ void start_http_server() {
     httplib::Server srv;
 
     srv.Get("/hi", [](const httplib::Request &, httplib::Response &res) {
+        std::cout << "GET /hi" << std::endl;
         res.set_content("Hello World!", "text/plain");
     });
 
@@ -316,7 +389,9 @@ void start_http_server() {
             res.status = 404;
             res.set_content("File not found", "text/plain");
         }else{
+            semaphore.acquire();
             set_supply(req.body);
+            semaphore.release();
             std::string supplie_added = "Supply added\n...\n" + j.dump(4);
             res.set_content(supplie_added, "application/json");
         }
@@ -324,4 +399,19 @@ void start_http_server() {
 
     // listen all interfaces
     srv.listen(localhost_ipv4, http_port);
+}
+
+void signal_handler(int signal) {
+    std::cout << "Signal " << signal << " received" << std::endl;
+    switch (signal)
+    {
+    case SIGTSTP:
+        exit(EXIT_SUCCESS);
+        break;
+    case SIGINT:
+        signal_end_conn = 1;
+        break;
+    default:
+        break;
+    }
 }
