@@ -1,10 +1,12 @@
 #include <client.hpp>
 
+using namespace std::chrono_literals;
+
 int main(int argc, char const* argv[])
 {
-    std::signal(SIGINT, signal_handler);   // SIGINT (Ctrl+C)
-    std::signal(SIGTSTP, signal_handler);  // SIGTSTP (Ctrl+Z)
-    std::signal(SIGTERM, signal_handler);  // SIGTERM
+    std::signal(SIGINT, signal_handler);  // SIGINT (Ctrl+C)
+    std::signal(SIGTSTP, signal_handler); // SIGTSTP (Ctrl+Z)
+    std::signal(SIGTERM, signal_handler); // SIGTERM
     std::unique_ptr<IConnection> con;
     std::string response;
     int serverSocket = 0;
@@ -49,6 +51,7 @@ int main(int argc, char const* argv[])
     std::string sup_amount;
 
     std::string img_name;
+    int nproc = 0;
     try
     {
         while (true)
@@ -99,17 +102,67 @@ int main(int argc, char const* argv[])
                         break;
                     case 3:
                         std::cout << "You have selected: " << option3.description << "." << std::endl;
-                        
+
                         std::cout << "Enter the image name: " << std::endl;
                         std::cin >> img_name;
-
                         // to lower case
                         boost::algorithm::to_lower(img_name);
 
-                        send_image_filtering_command(user, img_name, serverSocket, con);
-                        // receive 
+                        std::cout << "Enter the number of threads: " << std::endl;
+                        std::cin >> nproc;
+
+                        send_image_filtering_command(user, img_name, nproc, serverSocket, con);
+                        // receive
                         break;
-                    case 4:
+                    case 4: {
+                        try
+                        {
+                            std::cout << "You have selected: " << option4.description << "." << std::endl;
+
+                            // Ask for the image names to get
+                            send_get_options_image_filtered_command(user, serverSocket, con);
+                            response = con->receiveFrom(serverSocket);
+
+                            // get image name from user
+                            std::string img_name = get_img_name(response);
+
+                            // send get image filtered selected
+                            send_get_image_filtered_command(user, img_name, serverSocket, con);
+
+                            // get compressed size
+                            response = con->receiveFrom(serverSocket);
+                            nlohmann::json j = nlohmann::json::parse(response);
+                            if (j["command"] == "error")
+                            {
+                                std::cout << "Error: " << j["message"].get<std::string>() << std::endl;
+                                std::this_thread::sleep_for(2s);
+                                break;
+                            }
+                            
+                            unsigned long compressedSize = j["compressedSize"].get<unsigned long>();
+
+                            std::string compressedFile;
+                            std::size_t dot_position = img_name.rfind('.');
+                            if (dot_position != std::string::npos)
+                            {
+                                compressedFile = img_name.substr(0, dot_position);
+                            }
+                            // Receive image
+                            std::string file_name_comp = img_path + compressedFile + extension;
+                            std::vector<char> file_data = receive_vector(serverSocket, file_name_comp, compressedSize);
+                            // Decompress image
+                            std::string fileName = img_path + img_name;
+                            decompressFile(file_data, fileName);
+                            break;
+                        }
+                        catch (const std::exception& e)
+                        {
+                            std::cerr << e.what() << '\n';
+                            std::this_thread::sleep_for(1s);
+                            end_client_conn();
+                        }
+                    }
+                    case 5:
                         std::cout << "You have selected: " << option4.description << "." << std::endl;
                         end_client_conn();
                         break;
@@ -130,7 +183,68 @@ int main(int argc, char const* argv[])
     return 0;
 }
 
+std::string get_img_name(std::string response)
+{
+    clear_screen();
+    nlohmann::json j = nlohmann::json::parse(response);
+    // get array of images names
+    std::vector<std::string> img_names = j["images"].get<std::vector<std::string>>();
+    // print the images names and option number
+    int option = 0;
+    while (true)
+    {
+        for (int i = 0; i < img_names.size(); i++)
+        {
+            std::cout << i + 1 << ". " << img_names[i] << std::endl;
+        }
+        std::cout << "Enter the option number: " << std::endl;
+        std::cin >> option;
+        if (option < 1 || option > img_names.size())
+        {
+            std::cout << "Invalid option. Please enter a valid number." << std::endl;
+        }
+        else
+        {
+            break;
+        }
+    }
+    return img_names[option - 1];
+}
+void send_get_image_filtered_command(UserCredentials user, std::string img_name, int serverSocket,
+                                     std::unique_ptr<IConnection>& con)
+{
+    std::cout << "Making get image filtered options ..." << std::endl;
 
+    nlohmann::json j;
+    j["username"] = user.get_username();
+    j["password"] = user.get_password();
+    j["command"] = "continue";
+    j["img_name"] = img_name;
+
+    // Convert the JSON object to a string
+    std::string jsonString = j.dump();
+    std::cout << "Sending: " << jsonString << std::endl;
+
+    // Send the string to the server
+    con->sendto(jsonString, serverSocket);
+}
+
+void send_get_options_image_filtered_command(UserCredentials user, int serverSocket, std::unique_ptr<IConnection>& con)
+{
+    std::cout << "Making get image filtered options ..." << std::endl;
+
+    nlohmann::json j;
+    j["username"] = user.get_username();
+    j["password"] = user.get_password();
+    j["command"] = option4.command;
+
+    // Convert the JSON object to a string
+    std::string jsonString = j.dump();
+    std::cout << "Sending: " << jsonString << std::endl;
+
+    // Send the string to the server
+    con->sendto(jsonString, serverSocket);
+}
 
 void end_client_conn()
 {
@@ -148,10 +262,12 @@ int get_options()
     std::cout << "2. " << option2.description << std::endl;
     std::cout << "3. " << option3.description << std::endl;
     std::cout << "4. " << option4.description << std::endl;
+    std::cout << "5. " << option5.description << std::endl;
     std::cin >> option;
     return option;
 }
-void send_image_filtering_command(UserCredentials user, std::string img_name, int serverSocket, std::unique_ptr<IConnection>& con)
+void send_image_filtering_command(UserCredentials user, std::string img_name, int nproc, int serverSocket,
+                                  std::unique_ptr<IConnection>& con)
 {
     std::cout << "Making image filtering command ..." << std::endl;
 
@@ -159,15 +275,48 @@ void send_image_filtering_command(UserCredentials user, std::string img_name, in
     j["username"] = user.get_username();
     j["password"] = user.get_password();
     j["command"] = option3.command;
-    j["image_name"] = img_name;
+    j["img_name"] = img_name;
+    j["num_threads"] = nproc;
 
-    // Convert the JSON object to a string
-    std::string jsonString = j.dump();
-    std::cout << "Sending: " << jsonString << std::endl;
+    // File path
+    const std::string inputFile = img_path + img_name;
 
-    // Send the string to the server
-    con->sendto(jsonString, serverSocket);
-    //send_compressed_image(jsonString, serverSocket, con);
+    // Extract the name of the file
+    std::string fileName;
+    std::size_t dot_position = img_name.rfind('.');
+    if (dot_position != std::string::npos)
+    { // npos is returned when the string is not found
+        fileName = img_name.substr(0, dot_position);
+    }
+    else
+    {
+        std::cout << "Invalid file name" << std::endl;
+        return;
+    }
+    const std::string compressedFile = img_path + fileName + extension;
+
+    int inputSize = 0;
+    unsigned long compressedSize = 0;
+    try
+    {
+        std::vector<char> file_data = compressFile(inputFile, compressedFile, &inputSize, &compressedSize);
+        j["compressedSize"] = compressedSize;
+        // Convert the JSON object to a string
+        std::string jsonString = j.dump();
+        std::cout << "Sending: " << jsonString << std::endl;
+        con->sendto(jsonString, serverSocket);
+        // Send the compressed file
+        send_vector(serverSocket, file_data, compressedSize);
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        std::cout << "Error sending data" << std::endl;
+        std::cout << "Please try again, maybe the file does not exist or the name is incorrect" << std::endl;
+        std::this_thread::sleep_for(1s);
+        return;
+    }
+    printf("Data sent successfully!\n");
     clear_screen();
 }
 
@@ -222,7 +371,12 @@ void UserCredentials::get_credentials()
 
 int UserCredentials::get_user_level()
 {
-    return 1;
+    // compare username and password
+    if (username == ADMIN_USER && password == ADMIN_PASS)
+    {
+        return 1;
+    }
+    return 0;
 }
 
 std::string UserCredentials::get_username() const
@@ -243,7 +397,8 @@ void clear_screen()
     std::cout << "\033[2J\033[H";
 }
 
-void signal_handler(int signal) {
+void signal_handler(int signal)
+{
     std::cout << "Signal " << signal << " received" << std::endl;
     switch (signal)
     {

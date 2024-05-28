@@ -8,7 +8,7 @@ void run_emergency_module()
 
     set_timestamp(last_keepalived, SIZE_TIME);
     generate_log(LOG_E_FILE_PATH, last_keepalived, message_);
-    sleep(360);
+    sleep(600);
     fprintf(stdout, "WARNING !!! 10 sec to close the connections\n");
     sleep(10);
     char last_event[] = "Server failure. Emergency notification sent to all connected clients.";

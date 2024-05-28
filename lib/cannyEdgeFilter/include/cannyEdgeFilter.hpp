@@ -22,6 +22,13 @@
 
 constexpr auto KERNEL_SIZE {3};
 
+const std::string path = "img_svr";
+const std::string sobelDirection = "sobelDirection.png";
+const std::string sobelMagnitude = "sobelMagnitude.png";
+const std::string gauss = "gauss.png";
+const std::string maxsupress = "maxsupress.png";
+const std::string canny = "canny.png";
+
 /**
  * @brief The EdgeDetection class applies Canny edge detection to an image.
  */
@@ -42,7 +49,7 @@ public:
      * @param inputImage The input image file.
      * @param outputImage The output image file.
      */
-    void cannyEdgeDetection(const std::string& inputImage, const std::string& outputImage);
+    void cannyEdgeDetection(const std::string& inputImage);
 
 private:
     float m_lowThreshold;

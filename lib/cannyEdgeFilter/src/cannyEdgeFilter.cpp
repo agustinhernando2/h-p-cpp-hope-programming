@@ -38,7 +38,7 @@ void EdgeDetection::applyGaussianBlur()
 
     // 1. Create temporal image with extra borders
 
-    #pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2)
     for (int row = 0; row < half_kernel_size; row++)
     {
         for (int col = 0; col < image_tmp.cols; col++)
@@ -47,7 +47,7 @@ void EdgeDetection::applyGaussianBlur()
         }
     }
 
-    #pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2)
     for (int row = image_tmp.rows - half_kernel_size; row < image_tmp.rows; row++)
     {
         for (int col = 0; col < image_tmp.cols; col++)
@@ -56,7 +56,7 @@ void EdgeDetection::applyGaussianBlur()
         }
     }
 
-    #pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2)
     for (int col = 0; col < half_kernel_size; col++)
     {
         for (int row = 0; row < image_tmp.rows; row++)
@@ -65,7 +65,7 @@ void EdgeDetection::applyGaussianBlur()
         }
     }
 
-    #pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2)
     for (int col = image_tmp.cols - half_kernel_size; col < image_tmp.cols; col++)
     {
         for (int row = 0; row < image_tmp.rows; row++)
@@ -74,7 +74,7 @@ void EdgeDetection::applyGaussianBlur()
         }
     }
 
-    #pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2)
     for (int row = 0; row < m_originalImage.rows; row++)
     {
         for (int col = 0; col < m_originalImage.cols; col++)
@@ -85,7 +85,7 @@ void EdgeDetection::applyGaussianBlur()
 
     // 2. Create Kernel
 
-    #pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2)
     for (int x = 0; x < KERNEL_SIZE; ++x)
     {
         for (int y = 0; y < KERNEL_SIZE; ++y)
@@ -99,12 +99,12 @@ void EdgeDetection::applyGaussianBlur()
 
     // 3. Apply filter
 
-    #pragma omp parallel collapse(2)
+#pragma omp parallel collapse(2)
     for (int imrow = half_kernel_size; imrow < image_tmp.rows - half_kernel_size; imrow++)
     {
         for (int imcol = half_kernel_size; imcol < image_tmp.cols - half_kernel_size; imcol++)
         {
-            #pragma omp parallel for collapse(2) reduction(+ : blur_accum)
+#pragma omp parallel for collapse(2) reduction(+ : blur_accum)
             for (int krow = -half_kernel_size; krow <= half_kernel_size; krow++)
             {
                 for (int kcol = -half_kernel_size; kcol <= half_kernel_size; kcol++)
@@ -119,7 +119,9 @@ void EdgeDetection::applyGaussianBlur()
         }
     }
 
-    m_imageFileOperations->saveImage("img/gauss.png", m_cannyEdges);
+    // concat path + image name + counter
+    std::string img_path = path + "/" + gauss;
+    m_imageFileOperations->saveImage(img_path, m_cannyEdges);
 }
 
 void EdgeDetection::sobelOperator()
@@ -140,12 +142,12 @@ void EdgeDetection::sobelOperator()
 
     float gx = 0, gy = 0;
 
-    #pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2)
     for (int rowIndex = 1; rowIndex < rows - 1; ++rowIndex)
     {
         for (int colIndex = 1; colIndex < cols - 1; ++colIndex)
         {
-            #pragma omp parallel for collapse(2) reduction(+ : gx, gy)
+#pragma omp parallel for collapse(2) reduction(+ : gx, gy)
             for (int kernelRowIndex = -1; kernelRowIndex <= 1; ++kernelRowIndex)
             {
                 for (int kernelColIndex = -1; kernelColIndex <= 1; ++kernelColIndex)
@@ -189,10 +191,14 @@ void EdgeDetection::sobelOperator()
     cv::normalize(m_direction, m_direction, 0, 255, cv::NORM_MINMAX);
 
     // Save the processed image for verification
-    m_imageFileOperations->saveImage("img/sobelDirection.png",
-                                     m_direction); // Saving the direction as an image for visualization
-    m_imageFileOperations->saveImage("img/sobelMagnitude.png",
-                                     m_magnitude); // Saving the direction as an image for visualization
+
+    // concat path + image name + counter
+    std::string img_path1 = path + "/" + sobelDirection;
+    m_imageFileOperations->saveImage(img_path1, m_direction); // Saving the direction as an image for visualization
+
+    // concat path + image name + counter
+    std::string img_path2 = path + "/" + sobelMagnitude;
+    m_imageFileOperations->saveImage(img_path2, m_magnitude); // Saving the direction as an image for visualization
 }
 
 void EdgeDetection::nonMaximumSuppression()
@@ -200,7 +206,7 @@ void EdgeDetection::nonMaximumSuppression()
     int rows = m_magnitude.rows;
     int cols = m_magnitude.cols;
 
-    #pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2)
     for (int i = 1; i < rows - 1; ++i)
     {
         for (int j = 1; j < cols - 1; ++j)
@@ -255,7 +261,9 @@ void EdgeDetection::nonMaximumSuppression()
     m_cannyEdges.col(0).setTo(0);
     m_cannyEdges.col(cols - 1).setTo(0);
 
-    m_imageFileOperations->saveImage("img/maxsupress.png", m_cannyEdges);
+    // concat path + image name + counter
+    std::string img_path = path + "/" + maxsupress;
+    m_imageFileOperations->saveImage(img_path, m_cannyEdges);
 }
 
 void EdgeDetection::checkContours(
@@ -274,8 +282,8 @@ void EdgeDetection::checkContours(
         return;
     }
 
-    // Now check all the connected pixels for any weak contours, avoid same pixel and previous pixel
-    #pragma omp parallel for collapse(2)
+// Now check all the connected pixels for any weak contours, avoid same pixel and previous pixel
+#pragma omp parallel for collapse(2)
     for (int side_row = row - 1; side_row < row + 1; ++side_row)
     {
         for (int side_col = col - 1; side_col < col + 1; ++side_col)
@@ -297,8 +305,8 @@ void EdgeDetection::applyLinkingAndHysteresis()
     cv::Mat strongEdges = cv::Mat::zeros(rows, cols, CV_32F);
     cv::Mat weakEdges = cv::Mat::zeros(rows, cols, CV_32F);
 
-    // Identify strong and weak edges
-    #pragma omp parallel for collapse(2)
+// Identify strong and weak edges
+#pragma omp parallel for collapse(2)
     for (int row = 0; row < rows; ++row)
     {
         for (int col = 0; col < cols; ++col)
@@ -309,8 +317,8 @@ void EdgeDetection::applyLinkingAndHysteresis()
         }
     }
 
-    // Update edges matrix based on connected strength
-    #pragma omp parallel for collapse(2)
+// Update edges matrix based on connected strength
+#pragma omp parallel for collapse(2)
     for (int row = 0; row < rows; ++row)
     {
         for (int col = 0; col < cols; ++col)
@@ -323,10 +331,13 @@ void EdgeDetection::applyLinkingAndHysteresis()
             checkContours(strongEdges, weakEdges, row, col, row, col);
         }
     }
-    m_imageFileOperations->saveImage("img/canny.png", m_cannyEdges);
+    // concat path + image name + counter
+    std::string img_path = path + "/" + canny;
+    // Save the processed image for verification
+    m_imageFileOperations->saveImage(img_path, m_cannyEdges);
 }
 
-void EdgeDetection::cannyEdgeDetection(const std::string& inputImage, const std::string& outputImage)
+void EdgeDetection::cannyEdgeDetection(const std::string& inputImage)
 {
     m_imageFileOperations = std::make_shared<ImageFileOperations>();
 
@@ -339,12 +350,33 @@ void EdgeDetection::cannyEdgeDetection(const std::string& inputImage, const std:
     m_magnitude = cv::Mat(m_originalImage.size(), CV_32F);
     m_direction = cv::Mat(m_originalImage.size(), CV_32F);
 
+    std::chrono::duration<double, std::milli> elapsed;
+
     // Apply Gaussian blur
+    auto start = std::chrono::high_resolution_clock::now();
     applyGaussianBlur();
+    auto end = std::chrono::high_resolution_clock::now();
+    elapsed = end - start;
+    std::cout << "applyGaussianBlur - Tiempo de ejecución: " << elapsed.count() << " ms\n";
 
+    // Apply Sobel operator
+    start = std::chrono::high_resolution_clock::now();
     sobelOperator();
+    end = std::chrono::high_resolution_clock::now();
+    elapsed = end - start;
+    std::cout << "sobelOperator - Tiempo de ejecución: " << elapsed.count() << " ms\n";
 
+    // Perform non-maximum suppression
+    start = std::chrono::high_resolution_clock::now();
     nonMaximumSuppression();
+    end = std::chrono::high_resolution_clock::now();
+    elapsed = end - start;
+    std::cout << "nonMaximumSuppression - Tiempo de ejecución: " << elapsed.count() << " ms\n";
 
+    // Apply linking and hysteresis
+    start = std::chrono::high_resolution_clock::now();
     applyLinkingAndHysteresis();
+    end = std::chrono::high_resolution_clock::now();
+    elapsed = end - start;
+    std::cout << "applyLinkingAndHysteresis - Tiempo de ejecución: " << elapsed.count() << " ms\n";
 }

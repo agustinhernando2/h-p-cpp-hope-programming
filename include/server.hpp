@@ -6,7 +6,9 @@
 #include <thread>
 #include <fstream>
 #include <semaphore>
+#include <cstdint> 
 
+#include <omp.h>
 #include <nlohmann/json.hpp>
 #include <httplib.h>
 
@@ -16,6 +18,7 @@
 #include <cppSocketLib.hpp>
 #include <alert_module.h>
 #include <emergency_module.h>
+#include <file_comunication_handler.hpp>
 
 // Global semaphore
 std::counting_semaphore<3> semaphore(1);
@@ -30,7 +33,9 @@ const char* tcp6_port = "8081";
 const int http_port = 8888;
 // Rocks db path
 const std::string rockdb_path = "data/database.db";
-
+// Path to save the images
+const std::string img_path = "img_svr/";
+// Queue message id
 int msg_id = 0;
 
 volatile sig_atomic_t signal_end_conn = 0;
@@ -42,11 +47,14 @@ struct Option {
     std::string description;
 };
 // User options
-const Option option1 = {1, "get_supplies","Get supplies from server"};
+const Option option1 = {1, "get_supplies", "Get supplies from server"};
 const Option option2 = {2, "set_supplies", "Set supplies to server"};
 const Option option3 = {3, "img_filtering", "Send image to process"};
-const Option option4 = {4, "end_conn", "End Connection"};
+const Option option4 = {4, "get_img_filtered", "Get image filtered from server"};
+const Option option5 = {5, "end_conn", "End Connection"};
 
+// Image names
+const std::string img_names[5] = {"sobelDirection.png", "sobelMagnitude.png", "canny.png", "maxsupress.png", "gauss.png"};
 /**
  * @brief Alert listener, when some alert is received, it will be printed and 
  * increased the alert counter
@@ -89,3 +97,11 @@ int get_command(std::string message);
 void start_db();
 
 void signal_handler(int signal);
+
+int get_image(std::string message, int clientFd);
+
+void send_image_file(IConnection* con, std::string img_name, int fd);
+
+std::string get_image_selected(IConnection* con, int fd);
+
+void send_images_names(IConnection* con, int clientFd);

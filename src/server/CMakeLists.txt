@@ -19,7 +19,7 @@ target_link_libraries(${PROJECT_NAME}
     nlohmann_json::nlohmann_json
     rocksDBWrapper
     cannyEdge
-    zip
+    ZLIB::ZLIB
     OpenMP::OpenMP_CXX
     DynamiCLib
     StatiCLib

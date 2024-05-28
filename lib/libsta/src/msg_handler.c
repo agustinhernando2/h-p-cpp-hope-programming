@@ -27,7 +27,7 @@ int create_message_queue()
     msg_id = msgget(key, IPC_CREAT | 0666);
     if (msg_id == -1 || msg_id == 0)
     {
-        error_handler("msgget error", __FILE__, __LINE__);
+        error_handler(". error", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
     printf("Message queue created QID = %d\n", msg_id);

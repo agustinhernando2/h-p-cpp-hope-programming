@@ -62,3 +62,5 @@ lib/cppSocket
 /img/canny.png
 /img_cli/*.png
 /img_svr/*.png
+/img_cli/*.gz
+/img_svr/*.gz

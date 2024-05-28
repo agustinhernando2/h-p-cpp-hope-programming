@@ -111,26 +111,136 @@ void handle_client(IConnection* server, int clientFd) {
                 server->sendto(message,clientFd);
                 break;
 
-            case 3:
-                //CANNY EDGE FILTER
+            case 3:{
                 std::cout << "Canny edge filter ..." << std::endl;
-                std::this_thread::sleep_for(1s);
+                try
+                {
+                    nlohmann::json j = nlohmann::json::parse(message);  
+                    unsigned long compressedSize = j["compressedSize"].get<unsigned long>(); 
+                    int num_threads = j["num_threads"].get<int>(); // number of threads
+                    std::string img_name = j["img_name"].get<std::string>(); // image name
+
+                    // Extract the name of the file
+                    std::string compressedFile;
+                    std::size_t dot_position = img_name.rfind('.');
+                    if (dot_position != std::string::npos) {
+                        compressedFile = img_name.substr(0, dot_position);
+                    }
+
+                    omp_set_num_threads(num_threads);
+                    std::cout << "Number of threads: " << num_threads << std::endl;
+
+                    // Receive image
+                    std::string file_name_comp = img_path + compressedFile + extension;
+                    std::vector<char> file_data = receive_vector(clientFd, file_name_comp, compressedSize);
+
+                    // Decompress image
+                    std::string fileName = img_path + img_name;
+                    decompressFile(file_data, fileName);
+
+                    // call the cannyEdgeDetection function
+                    EdgeDetection edgeDetection(40.0, 80.0, 1.0);
+                    edgeDetection.cannyEdgeDetection(fileName);
+                }
+                catch(const std::exception& e)
+                {
+                    std::cerr << e.what() << '\n';
+                    end_conn(clientFd);
+                }
                 break;
-            case 4:
+            }
+            case 4:{
+                try
+                {
+                    send_images_names(server, clientFd);
+                    std::string img_name = get_image_selected(server, clientFd);
+                    send_image_file(server, img_name, clientFd);
+                    break;
+                }
+                catch(const std::exception& e)
+                {
+                    std::cerr << e.what() << '\n';
+                    end_conn(clientFd);
+                }
+            }
+            case 5:
                 end_conn(clientFd);
                 break;
             default:
                 fprintf(stdout, "Command error\n");
                 break;
-            };
-
-                
+            };    
         }
     } catch (const std::runtime_error& e) {
         std::cerr << "Error: " << e.what() << std::endl; 
     }
     
     close(clientFd);
+}
+
+void send_images_names(IConnection* con, int clientFd){
+    nlohmann::json j;
+    // Add image as a key and img_names as an array value
+    j["images"] = img_names;
+    std::string message = j.dump();
+    con->sendto(message, clientFd);
+}
+
+std::string get_image_selected(IConnection* con, int fd){
+    std::string message = con->receiveFrom(fd);
+    nlohmann::json j = nlohmann::json::parse(message);
+    std::string img_name = j["img_name"].get<std::string>();
+    return img_name;
+}
+
+void send_image_file(IConnection* con, std::string img_name, int fd)
+{
+    nlohmann::json j;
+    j["img_name"] = img_name;
+
+    // File path
+    const std::string inputFile = img_path + img_name;
+
+    // Extract the name of the file
+    std::string fileName;
+    std::size_t dot_position = img_name.rfind('.');
+    if (dot_position != std::string::npos)
+    { // npos is returned when the string is not found
+        fileName = img_name.substr(0, dot_position);
+    }
+    else
+    {
+        std::cout << "Invalid file name" << std::endl;
+        return;
+    }
+    const std::string compressedFile = img_path + fileName + extension;
+
+    int inputSize = 0;
+    unsigned long compressedSize = 0;
+    try
+    {
+        std::vector<char> file_data = compressFile(inputFile, compressedFile, &inputSize, &compressedSize);
+        j["compressedSize"] = compressedSize;
+        // Convert the JSON object to a string
+        std::string jsonString = j.dump();
+        std::cout << "Sending: " << jsonString << std::endl;
+        con->sendto(jsonString, fd);
+        // Send the compressed file
+        send_vector(fd, file_data, compressedSize);
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        std::cout << "Error sending data" << std::endl;
+        j["command"] = "error";
+        j["message"] = "Please try again, maybe the file does not exist or the name is incorrect";
+        std::string message = j.dump();
+        con->sendto(message, fd);
+        std::cout << j["message"].get<std::string>() << std::endl;
+        std::this_thread::sleep_for(1s);
+        return;
+    }
+    printf("Data sent successfully!\n");
 }
 
 void alert_listener() {
@@ -291,6 +401,8 @@ int get_command(std::string message){
     }else if(command == option3.command){
         return 3;
     }else if(command == option4.command){
+        return 4;
+    }else if(command == option5.command){
         return 4;
     }else{
         return 0;

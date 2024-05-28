@@ -31,4 +31,5 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   rocksDBWrapper
   cJSON 
   nlohmann_json::nlohmann_json
+  ZLIB::ZLIB
   )

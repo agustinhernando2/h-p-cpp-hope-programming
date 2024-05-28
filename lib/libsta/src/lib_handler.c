@@ -114,7 +114,6 @@ void error_handler(const char *error_message, char *file, int line)
 
 int generate_log(char *filename, char *timestamp, char *message)
 {
-
     FILE *file;
     file = fopen(filename, "a");
     if (file == NULL)

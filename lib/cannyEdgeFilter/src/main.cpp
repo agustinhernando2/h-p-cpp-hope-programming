@@ -19,6 +19,6 @@
 int main()
 {
     EdgeDetection edgeDetection(40.0, 80.0, 1.0);
-    edgeDetection.cannyEdgeDetection("../img/canny.png", "output.jpg");
+    edgeDetection.cannyEdgeDetection("../img/canny.png");
     return 0;
 }

@@ -18,8 +18,8 @@
 #define SOUTH_ENTRY "SOUTH"
 
 // temperature range
-#define MIN_TEMPERATURE 35
-#define MAX_TEMPERATURE 42
+#define MIN_TEMPERATURE 32
+#define MAX_TEMPERATURE 39
 #define HIGH_TEMPERATURE 38
 #define BUFFER_SIZE_QMS 512
 
@@ -32,9 +32,6 @@
 // log file
 #define LOG_FILE_PATH "data/temperature.log"
 #define JSON_FILE_PATH "data/state_summary.json"
-
-
-
 
 typedef struct
 {
