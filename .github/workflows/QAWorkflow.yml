@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: doxygen gcovr lcov cppcheck graphviz clang-format valgrind bc libgdal-dev libopencv-dev librocksdb-dev libzip-dev
+          packages: doxygen gcovr lcov cppcheck graphviz clang-format valgrind bc libgdal-dev libopencv-dev librocksdb-dev libzip-dev libboost-all-dev
           version: 1.0
       - name: Run style check
         uses: ./.github/actions/style
