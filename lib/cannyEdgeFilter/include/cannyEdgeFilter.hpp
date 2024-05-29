@@ -46,8 +46,7 @@ public:
 
     /**
      * @brief Applies Canny edge detection to an image.
-     * @param inputImage The input image file.
-     * @param outputImage The output image file.
+     * @param inputImage The name of the image file to apply edge detection to.
      */
     void cannyEdgeDetection(const std::string& inputImage);
 

@@ -22,10 +22,18 @@ extern "C"
 #endif
 
     extern int msg_id;
-
+    /**
+     * @brief Structure to store the message
+     */
     typedef struct
     {
+        /**
+         * @brief Message type
+         */
         long mtype;
+        /**
+         * @brief Message
+         */
         char message[BUFFER_SIZE_M];
     } mess_t;
 

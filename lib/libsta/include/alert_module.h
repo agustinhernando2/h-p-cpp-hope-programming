@@ -28,10 +28,22 @@
 #define ALERT 1
 #define K_ALERTS "alerts"
 
+/**
+ * @brief Structure to store the temperature
+ */
 typedef struct
 {
+    /**
+     * @brief Timestamp
+     */
     char timestamp[SIZE_TIME];
+    /**
+     * @brief Location
+     */
     char location[SIZE_TIME];
+    /**
+     * @brief Temperature
+     */
     double temperature;
 } str_temp;
 

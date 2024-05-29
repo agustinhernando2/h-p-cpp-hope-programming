@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['option_9',['Option',['../structOption.html',1,'']]]
+  ['edgedetection_30',['EdgeDetection',['../classEdgeDetection.html',1,'']]]
 ];

@@ -1,0 +1,64 @@
+\hypertarget{classImageFileOperations}{}\doxysection{Image\+File\+Operations Class Reference}
+\label{classImageFileOperations}\index{ImageFileOperations@{ImageFileOperations}}
+
+
+The \mbox{\hyperlink{classImageFileOperations}{Image\+File\+Operations}} class provides methods to save and load images.  
+
+
+
+
+{\ttfamily \#include $<$image\+File\+Operations.\+hpp$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{classImageFileOperations_adc074915de08f71a34c1e9f472a3508f}{save\+Image}} (const std\+::string \&filename, const cv\+::\+Mat \&image)
+\begin{DoxyCompactList}\small\item\em Saves an image to a file. \end{DoxyCompactList}\item 
+cv\+::\+Mat \mbox{\hyperlink{classImageFileOperations_a95e57912755b4f229ce499bff1ac35e6}{load\+Image}} (const std\+::string \&filename)
+\begin{DoxyCompactList}\small\item\em Loads an image from a file. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+The \mbox{\hyperlink{classImageFileOperations}{Image\+File\+Operations}} class provides methods to save and load images. 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classImageFileOperations_a95e57912755b4f229ce499bff1ac35e6}\label{classImageFileOperations_a95e57912755b4f229ce499bff1ac35e6}} 
+\index{ImageFileOperations@{ImageFileOperations}!loadImage@{loadImage}}
+\index{loadImage@{loadImage}!ImageFileOperations@{ImageFileOperations}}
+\doxysubsubsection{\texorpdfstring{loadImage()}{loadImage()}}
+{\footnotesize\ttfamily cv\+::\+Mat Image\+File\+Operations\+::load\+Image (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{filename }\end{DoxyParamCaption})}
+
+
+
+Loads an image from a file. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filename} & The name of the file to load the image from. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The loaded image. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classImageFileOperations_adc074915de08f71a34c1e9f472a3508f}\label{classImageFileOperations_adc074915de08f71a34c1e9f472a3508f}} 
+\index{ImageFileOperations@{ImageFileOperations}!saveImage@{saveImage}}
+\index{saveImage@{saveImage}!ImageFileOperations@{ImageFileOperations}}
+\doxysubsubsection{\texorpdfstring{saveImage()}{saveImage()}}
+{\footnotesize\ttfamily bool Image\+File\+Operations\+::save\+Image (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{filename,  }\item[{const cv\+::\+Mat \&}]{image }\end{DoxyParamCaption})}
+
+
+
+Saves an image to a file. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filename} & The name of the file to save the image to. \\
+\hline
+{\em image} & The image to save. \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+lib/canny\+Edge\+Filter/include/image\+File\+Operations.\+hpp\end{DoxyCompactItemize}
