@@ -14,7 +14,7 @@
 #define BUFFER_SIZE_M 512
 
 // message queue
-#define K_MSG "include"
+#define K_MSG "lib"
 
 #ifdef __cplusplus
 extern "C"
