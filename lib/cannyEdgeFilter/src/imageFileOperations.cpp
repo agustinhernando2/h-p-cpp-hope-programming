@@ -16,12 +16,12 @@
 
 #include "imageFileOperations.hpp"
 
-bool ImageFileOperations::saveImage(const std::string& filename, const cv::Mat& image)
+bool ImageFileOperations::saveImage(const std::string &filename, const cv::Mat &image)
 {
     return cv::imwrite(filename, image);
 }
 
-cv::Mat ImageFileOperations::loadImage(const std::string& filename)
+cv::Mat ImageFileOperations::loadImage(const std::string &filename)
 {
     return cv::imread(filename, cv::IMREAD_GRAYSCALE);
 }

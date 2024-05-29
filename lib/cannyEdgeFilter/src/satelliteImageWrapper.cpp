@@ -17,10 +17,10 @@
 #include "satelliteImageWrapper.hpp"
 
 // SatelliteImageWrapper methods
-SatelliteImageWrapper::SatelliteImageWrapper(const std::string& filename)
+SatelliteImageWrapper::SatelliteImageWrapper(const std::string &filename)
 {
     GDALAllRegister();
-    m_dataset = (GDALDataset*)GDALOpen(filename.c_str(), GA_ReadOnly);
+    m_dataset = (GDALDataset *)GDALOpen(filename.c_str(), GA_ReadOnly);
     if (!m_dataset)
     {
         throw std::runtime_error("Failed to open file: " + filename);

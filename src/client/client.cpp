@@ -2,7 +2,7 @@
 
 using namespace std::chrono_literals;
 
-int main(int argc, char const* argv[])
+int main(int argc, char const *argv[])
 {
     std::signal(SIGINT, signal_handler);  // SIGINT (Ctrl+C)
     std::signal(SIGTSTP, signal_handler); // SIGTSTP (Ctrl+Z)
@@ -138,7 +138,7 @@ int main(int argc, char const* argv[])
                                 std::this_thread::sleep_for(2s);
                                 break;
                             }
-                            
+
                             unsigned long compressedSize = j["compressedSize"].get<unsigned long>();
 
                             std::string compressedFile;
@@ -155,7 +155,7 @@ int main(int argc, char const* argv[])
                             decompressFile(file_data, fileName);
                             break;
                         }
-                        catch (const std::exception& e)
+                        catch (const std::exception &e)
                         {
                             std::cerr << e.what() << '\n';
                             std::this_thread::sleep_for(1s);
@@ -175,7 +175,7 @@ int main(int argc, char const* argv[])
             }
         }
     }
-    catch (const std::exception& e)
+    catch (const std::exception &e)
     {
         std::cerr << e.what() << std::endl;
         return 1;
@@ -193,13 +193,13 @@ std::string get_img_name(std::string response)
     int option = 0;
     while (true)
     {
-        for (int i = 0; i < (int) img_names.size(); i++)
+        for (int i = 0; i < (int)img_names.size(); i++)
         {
             std::cout << i + 1 << ". " << img_names[i] << std::endl;
         }
         std::cout << "Enter the option number: " << std::endl;
         std::cin >> option;
-        if (option < 1 || option > (int) img_names.size())
+        if (option < 1 || option > (int)img_names.size())
         {
             std::cout << "Invalid option. Please enter a valid number." << std::endl;
         }
@@ -211,7 +211,7 @@ std::string get_img_name(std::string response)
     return img_names[option - 1];
 }
 void send_get_image_filtered_command(UserCredentials user, std::string img_name, int serverSocket,
-                                     std::unique_ptr<IConnection>& con)
+                                     std::unique_ptr<IConnection> &con)
 {
     std::cout << "Making get image filtered options ..." << std::endl;
 
@@ -229,7 +229,7 @@ void send_get_image_filtered_command(UserCredentials user, std::string img_name,
     con->sendto(jsonString, serverSocket);
 }
 
-void send_get_options_image_filtered_command(UserCredentials user, int serverSocket, std::unique_ptr<IConnection>& con)
+void send_get_options_image_filtered_command(UserCredentials user, int serverSocket, std::unique_ptr<IConnection> &con)
 {
     std::cout << "Making get image filtered options ..." << std::endl;
 
@@ -267,7 +267,7 @@ int get_options()
     return option;
 }
 void send_image_filtering_command(UserCredentials user, std::string img_name, int nproc, int serverSocket,
-                                  std::unique_ptr<IConnection>& con)
+                                  std::unique_ptr<IConnection> &con)
 {
     std::cout << "Making image filtering command ..." << std::endl;
 
@@ -308,7 +308,7 @@ void send_image_filtering_command(UserCredentials user, std::string img_name, in
         // Send the compressed file
         send_vector(serverSocket, file_data, compressedSize);
     }
-    catch (const std::exception& e)
+    catch (const std::exception &e)
     {
         std::cerr << e.what() << '\n';
         std::cout << "Error sending data" << std::endl;
@@ -321,7 +321,7 @@ void send_image_filtering_command(UserCredentials user, std::string img_name, in
 }
 
 void send_set_supplies_command(UserCredentials user, std::string sup_type, std::string sup_name, std::string sup_amount,
-                               int serverSocket, std::unique_ptr<IConnection>& con)
+                               int serverSocket, std::unique_ptr<IConnection> &con)
 {
     std::cout << "Making set supplies command ..." << std::endl;
 
@@ -342,7 +342,7 @@ void send_set_supplies_command(UserCredentials user, std::string sup_type, std::
     clear_screen();
 }
 
-void send_get_supplies_command(UserCredentials user, int serverSocket, std::unique_ptr<IConnection>& con)
+void send_get_supplies_command(UserCredentials user, int serverSocket, std::unique_ptr<IConnection> &con)
 {
     std::cout << "Making get supplies command ..." << std::endl;
 

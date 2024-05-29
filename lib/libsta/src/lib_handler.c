@@ -113,7 +113,7 @@ void error_handler(const char *error_message, char *file, int line)
 }
 
 int generate_log(char *message)
-{   
+{
     char timestamp[SIZE_TIME];
     set_timestamp(timestamp, SIZE_TIME);
 

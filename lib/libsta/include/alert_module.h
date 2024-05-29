@@ -9,8 +9,8 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <msg_handler.h>
 #include <cjson_handler.h>
+#include <msg_handler.h>
 
 #define NORT_ENTRY "NORTH"
 #define WEST_ENTRY "WEST"
@@ -37,22 +37,23 @@ typedef struct
 
 /**
  * @brief Get the temperature
-*/
+ */
 double get_temperature();
 
 /**
  * @brief Simulate each temperature sensor
-*/
+ */
 void simulate_temperature_sensor(char *entry);
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-/**
- * @brief Run the alert module
-*/
-void run_alert_module();
+    /**
+     * @brief Run the alert module
+     */
+    void run_alert_module();
 
 #ifdef __cplusplus
 }

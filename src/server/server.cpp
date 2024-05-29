@@ -3,12 +3,13 @@
 
 using namespace std::chrono_literals;
 
-int main() {
+int main()
+{
     // start_db();
 
-    std::signal(SIGTERM, signal_handler);  // SIGTERM
+    std::signal(SIGTERM, signal_handler); // SIGTERM
 
-    std::vector<std::jthread> serverThreads;    
+    std::vector<std::jthread> serverThreads;
     // Start servers for IPv4
     std::cout << "Server IPv4 TCP listening: " << localhost_ipv4 << ":" << tcp4_port << std::endl;
     serverThreads.emplace_back([] { run_server(localhost_ipv4, tcp4_port, TCP); });
@@ -28,8 +29,10 @@ int main() {
     serverThreads.emplace_back([] { alert_listener(); });
 
     // Wait for all threads to finish
-    for (auto& thread : serverThreads) {
-        if (thread.joinable()) {
+    for (auto &thread : serverThreads)
+    {
+        if (thread.joinable())
+        {
             thread.join();
         }
     }
@@ -37,36 +40,43 @@ int main() {
     return 0;
 }
 
-int run_server(std::string address, std::string port, int protocol){
+int run_server(std::string address, std::string port, int protocol)
+{
     std::unique_ptr<IConnection> server = createConnection(address, port, true, protocol);
-    if (server->bind()) {
-        while (true) {
+    if (server->bind())
+    {
+        while (true)
+        {
             // Accept connection
             int clientFd = server->connect();
 
-            if (clientFd < 0) {
+            if (clientFd < 0)
+            {
                 std::cerr << "Accept error." << std::endl;
                 continue;
             }
             std::cout << "Connection accepted. Waiting for messages from the client..." << std::endl;
 
             // Manage the client in a new thread
-            std::jthread clientThread(handle_client, server.get(), clientFd); 
+            std::jthread clientThread(handle_client, server.get(), clientFd);
             clientThread.detach(); // free the thread resources
         }
-    } else {
+    }
+    else
+    {
         return 1;
     }
 
     return 0;
 }
 
-void handle_client(IConnection* server, int clientFd) {
+void handle_client(IConnection *server, int clientFd)
+{
 
-    std::signal(SIGINT, signal_handler);   // SIGINT
+    std::signal(SIGINT, signal_handler); // SIGINT
 
     // Manage the client in a new thread
-    std::jthread emergency_listener(run_emergency_listener, clientFd); 
+    std::jthread emergency_listener(run_emergency_listener, clientFd);
     emergency_listener.detach(); // free the thread resources
 
     // Internal client to access the HTTP server
@@ -74,16 +84,18 @@ void handle_client(IConnection* server, int clientFd) {
 
     std::string message;
     int status;
-    try {
-        while (true) {
+    try
+    {
+        while (true)
+        {
             if (signal_end_conn)
             {
                 end_conn(clientFd);
             }
             // Receive message from client
             message = server->receiveFrom(clientFd);
-            
-            std::cout << "PID: " << getpid() << std::endl; 
+
+            std::cout << "PID: " << getpid() << std::endl;
             std::cout << "Message received: " << message << std::endl;
             std::this_thread::sleep_for(500ms);
 
@@ -95,35 +107,38 @@ void handle_client(IConnection* server, int clientFd) {
                 res = icli.Get("/supplies");
                 status = res->status;
                 message = res->body;
-                if(message.empty() || status == 404){
+                if (message.empty() || status == 404)
+                {
                     message = "No supplies found";
                 }
-                server->sendto(message,clientFd);
+                server->sendto(message, clientFd);
                 break;
             case 2:
                 std::cout << "Setting supplies..." << std::endl;
-                res = icli.Post("/setsupplies",message, "application/json");
+                res = icli.Post("/setsupplies", message, "application/json");
                 status = res->status;
                 message = res->body;
-                if(message.empty() || status == 404){
+                if (message.empty() || status == 404)
+                {
                     message = "No supplies found";
                 }
-                server->sendto(message,clientFd);
+                server->sendto(message, clientFd);
                 break;
 
-            case 3:{
+            case 3: {
                 std::cout << "Canny edge filter ..." << std::endl;
                 try
                 {
-                    nlohmann::json j = nlohmann::json::parse(message);  
-                    unsigned long compressedSize = j["compressedSize"].get<unsigned long>(); 
-                    int num_threads = j["num_threads"].get<int>(); // number of threads
+                    nlohmann::json j = nlohmann::json::parse(message);
+                    unsigned long compressedSize = j["compressedSize"].get<unsigned long>();
+                    int num_threads = j["num_threads"].get<int>();           // number of threads
                     std::string img_name = j["img_name"].get<std::string>(); // image name
 
                     // Extract the name of the file
                     std::string compressedFile;
                     std::size_t dot_position = img_name.rfind('.');
-                    if (dot_position != std::string::npos) {
+                    if (dot_position != std::string::npos)
+                    {
                         compressedFile = img_name.substr(0, dot_position);
                     }
 
@@ -142,14 +157,14 @@ void handle_client(IConnection* server, int clientFd) {
                     EdgeDetection edgeDetection(40.0, 80.0, 1.0);
                     edgeDetection.cannyEdgeDetection(fileName);
                 }
-                catch(const std::exception& e)
+                catch (const std::exception &e)
                 {
                     std::cerr << e.what() << '\n';
                     end_conn(clientFd);
                 }
                 break;
             }
-            case 4:{
+            case 4: {
                 try
                 {
                     send_images_names(server, clientFd);
@@ -157,7 +172,7 @@ void handle_client(IConnection* server, int clientFd) {
                     send_image_file(server, img_name, clientFd);
                     break;
                 }
-                catch(const std::exception& e)
+                catch (const std::exception &e)
                 {
                     std::cerr << e.what() << '\n';
                     end_conn(clientFd);
@@ -169,16 +184,19 @@ void handle_client(IConnection* server, int clientFd) {
             default:
                 fprintf(stdout, "Command error\n");
                 break;
-            };    
+            };
         }
-    } catch (const std::runtime_error& e) {
-        std::cerr << "Error: " << e.what() << std::endl; 
     }
-    
+    catch (const std::runtime_error &e)
+    {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+
     close(clientFd);
 }
 
-void send_images_names(IConnection* con, int clientFd){
+void send_images_names(IConnection *con, int clientFd)
+{
     nlohmann::json j;
     // Add image as a key and img_names as an array value
     j["images"] = img_names;
@@ -186,14 +204,15 @@ void send_images_names(IConnection* con, int clientFd){
     con->sendto(message, clientFd);
 }
 
-std::string get_image_selected(IConnection* con, int fd){
+std::string get_image_selected(IConnection *con, int fd)
+{
     std::string message = con->receiveFrom(fd);
     nlohmann::json j = nlohmann::json::parse(message);
     std::string img_name = j["img_name"].get<std::string>();
     return img_name;
 }
 
-void send_image_file(IConnection* con, std::string img_name, int fd)
+void send_image_file(IConnection *con, std::string img_name, int fd)
 {
     nlohmann::json j;
     j["img_name"] = img_name;
@@ -228,7 +247,7 @@ void send_image_file(IConnection* con, std::string img_name, int fd)
         // Send the compressed file
         send_vector(fd, file_data, compressedSize);
     }
-    catch (const std::exception& e)
+    catch (const std::exception &e)
     {
         std::cerr << e.what() << '\n';
         std::cout << "Error sending data" << std::endl;
@@ -245,11 +264,14 @@ void send_image_file(IConnection* con, std::string img_name, int fd)
     generate_log(message);
 }
 
-void alert_listener() {
+void alert_listener()
+{
     mess_t send_buffer;
 
-    while (true) {
-        if (msgrcv(msg_id, &send_buffer, sizeof(send_buffer), 1, 0) == -1) {
+    while (true)
+    {
+        if (msgrcv(msg_id, &send_buffer, sizeof(send_buffer), 1, 0) == -1)
+        {
             // print errno
             perror("msgrcv error");
             std::this_thread::sleep_for(1s);
@@ -258,14 +280,15 @@ void alert_listener() {
 
         std::cout << "Alert received: " << send_buffer.message << std::endl;
 
-        try {
+        try
+        {
             // Open db
             semaphore.acquire();
             std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>(database);
 
             // Parse alert received
             nlohmann::json alert_received = nlohmann::json::parse(send_buffer.message);
-            
+
             std::string message = send_buffer.message;
             generate_log(message);
 
@@ -277,17 +300,20 @@ void alert_listener() {
             db->get(K_ALERTS, alerts);
 
             // check if alerts is empty
-            if (alerts.empty()) {
+            if (alerts.empty())
+            {
                 alerts = "{}";
             }
 
             nlohmann::json alerts_in_db = nlohmann::json::parse(alerts);
 
             alerts_in_db[location] = alerts_in_db[location].get<int>() + 1;
-            
+
             // update
             db->put(K_ALERTS, alerts_in_db.dump());
-        } catch (const std::exception& e) {
+        }
+        catch (const std::exception &e)
+        {
             std::string message = "Error processing alert: ";
             std::cerr << message << e.what() << std::endl;
             generate_log(message);
@@ -298,10 +324,13 @@ void alert_listener() {
     }
 }
 
-void run_emergency_listener(int clientFd) {
+void run_emergency_listener(int clientFd)
+{
     mess_t send_buffer;
-    while (true) {
-        if (msgrcv(msg_id, &send_buffer, sizeof(send_buffer), 2, 0) == -1) {
+    while (true)
+    {
+        if (msgrcv(msg_id, &send_buffer, sizeof(send_buffer), 2, 0) == -1)
+        {
             // print errno
             perror("msgrcv error");
             std::this_thread::sleep_for(1s);
@@ -310,7 +339,8 @@ void run_emergency_listener(int clientFd) {
 
         std::cout << "Emergency received: " << send_buffer.message << std::endl;
 
-        try {
+        try
+        {
             // Open db
             semaphore.acquire();
             std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>(database);
@@ -323,7 +353,7 @@ void run_emergency_listener(int clientFd) {
             // Get alert location
             std::string last_keepalived = emergency_received[LAST_KEEP_ALIVED].get<std::string>();
             std::string last_event = emergency_received[LAST_EVENT].get<std::string>();
-            
+
             generate_log(last_keepalived);
             generate_log(last_event);
             // Get alerts from db
@@ -331,7 +361,8 @@ void run_emergency_listener(int clientFd) {
             db->get(K_EMERGENCY, emergency);
 
             // check if alerts is empty
-            if (emergency.empty()) {
+            if (emergency.empty())
+            {
                 emergency = "{}";
             }
 
@@ -343,7 +374,9 @@ void run_emergency_listener(int clientFd) {
             // update
             db->put(K_EMERGENCY, emergency_in_db.dump());
             // End connection and exit
-        } catch (const std::exception& e) {
+        }
+        catch (const std::exception &e)
+        {
             std::string message = "Error processing emergency: ";
             std::cerr << message << e.what() << std::endl;
             generate_log(message);
@@ -385,7 +418,8 @@ const std::string json_data = R"(
 }
 )";
 
-void start_db() {
+void start_db()
+{
     std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>(database);
 
     try
@@ -400,34 +434,45 @@ void start_db() {
 
         std::cout << "Database inicialized." << std::endl;
     }
-    catch(const std::exception& e)
+    catch (const std::exception &e)
     {
         std::cerr << e.what() << '\n';
     }
-    
 }
 
-int get_command(std::string message){
+int get_command(std::string message)
+{
 
     nlohmann::json j = nlohmann::json::parse(message);
     std::string command = j["command"];
-    if(command == option1.command){
+    if (command == option1.command)
+    {
         return 1;
-    }else if(command == option2.command){
+    }
+    else if (command == option2.command)
+    {
         return 2;
-    }else if(command == option3.command){
+    }
+    else if (command == option3.command)
+    {
         return 3;
-    }else if(command == option4.command){
+    }
+    else if (command == option4.command)
+    {
         return 4;
-    }else if(command == option5.command){
+    }
+    else if (command == option5.command)
+    {
         return 4;
-    }else{
+    }
+    else
+    {
         return 0;
     }
 }
 
 void end_conn(int fd)
-{   
+{
     std::string message = "Ending connection...";
     generate_log(message);
     std::cout << message << std::endl;
@@ -438,11 +483,12 @@ void end_conn(int fd)
     message = j.dump();
     // Send end connection message
     send(fd, message.c_str(), message.size(), 0);
-    
+
     std::this_thread::sleep_for(2s);
     exit(EXIT_SUCCESS);
 }
-void start_http_server() {
+void start_http_server()
+{
     httplib::Server srv;
 
     srv.Get("/hi", [](const httplib::Request &, httplib::Response &res) {
@@ -457,9 +503,12 @@ void start_http_server() {
 
         std::string supplies = get_supplies();
 
-        if (!supplies.empty()) {
+        if (!supplies.empty())
+        {
             res.set_content(supplies, "application/json");
-        } else {
+        }
+        else
+        {
             res.status = 404;
             res.set_content("File not found", "text/plain");
         }
@@ -480,15 +529,18 @@ void start_http_server() {
 
         db->get(SUPPLIES_KEY, result);
         j[SUPPLIES_KEY] = nlohmann::json::parse(result);
-        
+
         db->get("emergency", result);
         j["emergency"] = nlohmann::json::parse(result);
 
         result = j.dump(4);
 
-        if (!result.empty()) {
+        if (!result.empty())
+        {
             res.set_content(result, "application/json");
-        } else {
+        }
+        else
+        {
             res.status = 404;
             res.set_content("File not found", "text/plain");
         }
@@ -498,7 +550,7 @@ void start_http_server() {
         std::string message = "Getting alerts...";
         std::cout << message << std::endl;
         generate_log(message);
-             
+
         std::string alerts;
         std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>(database);
         nlohmann::json j;
@@ -509,9 +561,12 @@ void start_http_server() {
         // Format the json
         alerts = j[K_ALERTS].dump(4);
 
-        if (1) {
+        if (1)
+        {
             res.set_content(alerts, "application/json");
-        } else {
+        }
+        else
+        {
             res.status = 404;
             res.set_content("File not found", "text/plain");
         }
@@ -523,10 +578,13 @@ void start_http_server() {
         generate_log(message);
 
         nlohmann::json j = nlohmann::json::parse(req.body);
-        if(j.empty()){
+        if (j.empty())
+        {
             res.status = 404;
             res.set_content("File not found", "text/plain");
-        }else{
+        }
+        else
+        {
             semaphore.acquire();
             set_supply(req.body);
             semaphore.release();
@@ -539,7 +597,8 @@ void start_http_server() {
     srv.listen(localhost_ipv4, http_port);
 }
 
-void signal_handler(int signal) {
+void signal_handler(int signal)
+{
     std::cout << "Signal " << signal << " received" << std::endl;
     switch (signal)
     {

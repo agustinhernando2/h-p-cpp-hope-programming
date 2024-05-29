@@ -25,20 +25,20 @@
  */
 class ImageFileOperations
 {
-public:
+  public:
     /**
      * @brief Saves an image to a file.
      * @param filename The name of the file to save the image to.
      * @param image The image to save.
      */
-    bool saveImage(const std::string& filename, const cv::Mat& image);
+    bool saveImage(const std::string &filename, const cv::Mat &image);
 
     /**
      * @brief Loads an image from a file.
      * @param filename The name of the file to load the image from.
      * @return The loaded image.
      */
-    cv::Mat loadImage(const std::string& filename);
+    cv::Mat loadImage(const std::string &filename);
 };
 
 #endif /* _IMAGE_FILE_OPERATIONS_HPP */

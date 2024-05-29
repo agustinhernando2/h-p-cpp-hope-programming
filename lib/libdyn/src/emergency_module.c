@@ -1,7 +1,7 @@
 #include <emergency_module.h>
 
 void run_emergency_module()
-{   
+{
     mess_t buffer;
     char last_keepalived[SIZE_TIME];
 

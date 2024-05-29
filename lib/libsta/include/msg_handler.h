@@ -17,26 +17,27 @@
 #define K_MSG "include"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-extern int msg_id;
+    extern int msg_id;
 
-typedef struct
-{
-    long mtype;
-    char message[BUFFER_SIZE_M];
-} mess_t;
+    typedef struct
+    {
+        long mtype;
+        char message[BUFFER_SIZE_M];
+    } mess_t;
 
-/**
- * @brief Create the message queue
-*/
-int create_message_queue();
+    /**
+     * @brief Create the message queue
+     */
+    int create_message_queue();
 
-/**
- * @brief Send the alert to the message queue
-*/
-void send_alert_msqueue(mess_t *send_buffer);
+    /**
+     * @brief Send the alert to the message queue
+     */
+    void send_alert_msqueue(mess_t *send_buffer);
 
 #ifdef __cplusplus
 }

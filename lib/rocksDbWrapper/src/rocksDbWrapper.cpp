@@ -16,11 +16,11 @@
 
 #include <rocksDbWrapper.hpp>
 
-RocksDbWrapper::RocksDbWrapper(const std::string& pathDatabase)
+RocksDbWrapper::RocksDbWrapper(const std::string &pathDatabase)
 {
     rocksdb::Options options;
     options.create_if_missing = true;
-    rocksdb::DB* dbPtr = nullptr; // Declare a raw pointer
+    rocksdb::DB *dbPtr = nullptr; // Declare a raw pointer
     rocksdb::Status status = rocksdb::DB::Open(options, pathDatabase, &dbPtr);
 
     if (!status.ok())
@@ -32,7 +32,7 @@ RocksDbWrapper::RocksDbWrapper(const std::string& pathDatabase)
     m_database.reset(dbPtr);
 }
 
-void RocksDbWrapper::put(const std::string& key, const rocksdb::Slice& value)
+void RocksDbWrapper::put(const std::string &key, const rocksdb::Slice &value)
 {
     rocksdb::Status status = m_database->Put(rocksdb::WriteOptions(), key, value);
     if (!status.ok())
@@ -41,7 +41,7 @@ void RocksDbWrapper::put(const std::string& key, const rocksdb::Slice& value)
     }
 }
 
-bool RocksDbWrapper::get(const std::string& key, std::string& value)
+bool RocksDbWrapper::get(const std::string &key, std::string &value)
 {
     rocksdb::Status status = m_database->Get(rocksdb::ReadOptions(), key, &value);
 
@@ -58,7 +58,7 @@ bool RocksDbWrapper::get(const std::string& key, std::string& value)
     return true;
 }
 
-void RocksDbWrapper::delete_(const std::string& key)
+void RocksDbWrapper::delete_(const std::string &key)
 {
     rocksdb::Status status = m_database->Delete(rocksdb::WriteOptions(), key);
 
@@ -68,11 +68,12 @@ void RocksDbWrapper::delete_(const std::string& key)
     }
 }
 
-std::vector<std::string> RocksDbWrapper::getAllKeys() 
+std::vector<std::string> RocksDbWrapper::getAllKeys()
 {
     std::vector<std::string> keys;
-    rocksdb::Iterator* it = m_database->NewIterator(rocksdb::ReadOptions());
-    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+    rocksdb::Iterator *it = m_database->NewIterator(rocksdb::ReadOptions());
+    for (it->SeekToFirst(); it->Valid(); it->Next())
+    {
         keys.push_back(it->key().ToString());
     }
     assert(it->status().ok()); // Check for any errors found during the scan
