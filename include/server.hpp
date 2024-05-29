@@ -100,12 +100,12 @@ int get_command(std::string message);
 
 /**
  * @brief Start the database
-*/
+ */
 void start_db();
 
 /**
  * @brief Signal handler
-*/
+ */
 void signal_handler(int signal);
 
 /**
@@ -113,20 +113,20 @@ void signal_handler(int signal);
  * @param message: the message received from the client
  * @param clientFd: the client file descriptor
  * @return the image id
-*/
+ */
 int get_image(std::string message, int clientFd);
 
 /**
  * @brief Send the image to the client
-*/
+ */
 void send_image_file(IConnection* con, std::string img_name, int fd);
 
 /**
  * @brief Get the image selected
-*/
+ */
 std::string get_image_selected(IConnection* con, int fd);
 
 /**
  * @brief Send the image names to the client
-*/
+ */
 void send_images_names(IConnection* con, int clientFd);
