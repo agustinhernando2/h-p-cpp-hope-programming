@@ -49,7 +49,7 @@
 
 #submodules
 #/lib/
-lib/cppSocket
+# lib/cppSocket
 
 *.tif
 *.db
