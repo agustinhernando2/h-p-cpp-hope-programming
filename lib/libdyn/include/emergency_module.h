@@ -20,6 +20,9 @@ extern "C"
 
     extern int msg_id;
 
+    /**
+     * @brief This function is used to handle the emergency module
+    */
     void run_emergency_module();
 
 #ifdef __cplusplus

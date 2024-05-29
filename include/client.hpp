@@ -19,11 +19,22 @@
 #include <file_comunication_handler.hpp>
 #include <nlohmann/json.hpp>
 
-// Constants for the user options
+/**
+ * @brief Structure to store the options
+*/
 struct Option
 {
+    /**
+     * @brief Message type
+    */
     int number;
+    /**
+     * @brief Command to send
+    */
     std::string command;
+    /**
+     * @brief Description of the command
+    */
     std::string description;
 };
 
@@ -54,6 +65,9 @@ const char* udp6_port = "8091";
 // flag to option 1 in loop
 int flag_opt1 = 0;
 
+/**
+ * @brief Class to store the user credentials
+*/
 class UserCredentials
 {
   private:
@@ -61,35 +75,95 @@ class UserCredentials
     std::string password;
 
   public:
+    /**
+     * @brief get the user credentials
+    */
     void get_credentials();
+    /**
+     * @brief get the user level
+    */
     int get_user_level();
+    /**
+     * @brief get the user name
+    */
     std::string get_username() const; // const member function, it does not modify the object
+    /**
+     * @brief get the user password
+    */
     std::string get_password() const; // const member function, it does not modify the object
 };
 
+/**
+ * @brief Clear the screen
+*/
 void clear_screen();
 
+/**
+ * @brief Get options from the user
+*/
 int get_options();
 
+/**
+ * @brief Get image name from the response
+*/
 std::string get_img_name(std::string response);
 
+/**
+ * @brief End the client connection
+*/
 void end_client_conn();
 
+/**
+ * @brief Signal handler
+*/
 void signal_handler(int signal);
 
+/**
+ * @brief Send the get supplies command
+*/
 void send_get_options_image_filtered_command(UserCredentials user, int serverSocket, std::unique_ptr<IConnection>& con);
 
+/**
+ * @brief Send the get image filtered command
+*/
 void send_get_image_filtered_command(UserCredentials user, std::string img_name, int serverSocket,
                                      std::unique_ptr<IConnection>& con);
 
+/**
+ * @brief Get the image to get from the response
+ * @param response
+*/
 void get_image_to_get(std::string& response);
 
+/**
+ * @brief Send the get supplies command
+ * @param user
+ * @param serverSocket
+ * @param con
+*/
 void send_get_supplies_command(UserCredentials user, int serverSocket, std::unique_ptr<IConnection>& con);
 
+/**
+ * @brief Send the image filtering command
+ * @param user
+ * @param img_name
+ * @param nproc
+ * @param serverSocket
+ * @param con
+*/
 void send_image_filtering_command(UserCredentials user, std::string img_name, int nproc, int serverSocket,
                                   std::unique_ptr<IConnection>& con);
 
+/**
+ * @brief Send the set supplies command
+ * @param user
+ * @param serverSocket
+*/
 void send_set_supplies_command(UserCredentials user, std::string sup_type, std::string sup_name, std::string sup_amount,
                                int serverSocket, std::unique_ptr<IConnection>& con);
 
+/**
+ * @brief Get the image name from the response
+ * @param response
+ **/
 std::string get_image_name(std::string response);
