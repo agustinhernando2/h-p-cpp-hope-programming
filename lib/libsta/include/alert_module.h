@@ -43,7 +43,7 @@ double get_temperature();
 /**
  * @brief Simulate each temperature sensor
  */
-void simulate_temperature_sensor(char *entry);
+void simulate_temperature_sensor(char* entry);
 
 #ifdef __cplusplus
 extern "C"

@@ -29,7 +29,7 @@ int main()
     serverThreads.emplace_back([] { alert_listener(); });
 
     // Wait for all threads to finish
-    for (auto &thread : serverThreads)
+    for (auto& thread : serverThreads)
     {
         if (thread.joinable())
         {
@@ -70,7 +70,7 @@ int run_server(std::string address, std::string port, int protocol)
     return 0;
 }
 
-void handle_client(IConnection *server, int clientFd)
+void handle_client(IConnection* server, int clientFd)
 {
 
     std::signal(SIGINT, signal_handler); // SIGINT
@@ -94,7 +94,6 @@ void handle_client(IConnection *server, int clientFd)
             }
             // Receive message from client
             message = server->receiveFrom(clientFd);
-
             std::cout << "PID: " << getpid() << std::endl;
             std::cout << "Message received: " << message << std::endl;
             std::this_thread::sleep_for(500ms);
@@ -157,7 +156,7 @@ void handle_client(IConnection *server, int clientFd)
                     EdgeDetection edgeDetection(40.0, 80.0, 1.0);
                     edgeDetection.cannyEdgeDetection(fileName);
                 }
-                catch (const std::exception &e)
+                catch (const std::exception& e)
                 {
                     std::cerr << e.what() << '\n';
                     end_conn(clientFd);
@@ -172,7 +171,7 @@ void handle_client(IConnection *server, int clientFd)
                     send_image_file(server, img_name, clientFd);
                     break;
                 }
-                catch (const std::exception &e)
+                catch (const std::exception& e)
                 {
                     std::cerr << e.what() << '\n';
                     end_conn(clientFd);
@@ -187,7 +186,7 @@ void handle_client(IConnection *server, int clientFd)
             };
         }
     }
-    catch (const std::runtime_error &e)
+    catch (const std::runtime_error& e)
     {
         std::cerr << "Error: " << e.what() << std::endl;
     }
@@ -195,7 +194,7 @@ void handle_client(IConnection *server, int clientFd)
     close(clientFd);
 }
 
-void send_images_names(IConnection *con, int clientFd)
+void send_images_names(IConnection* con, int clientFd)
 {
     nlohmann::json j;
     // Add image as a key and img_names as an array value
@@ -204,7 +203,7 @@ void send_images_names(IConnection *con, int clientFd)
     con->sendto(message, clientFd);
 }
 
-std::string get_image_selected(IConnection *con, int fd)
+std::string get_image_selected(IConnection* con, int fd)
 {
     std::string message = con->receiveFrom(fd);
     nlohmann::json j = nlohmann::json::parse(message);
@@ -212,7 +211,7 @@ std::string get_image_selected(IConnection *con, int fd)
     return img_name;
 }
 
-void send_image_file(IConnection *con, std::string img_name, int fd)
+void send_image_file(IConnection* con, std::string img_name, int fd)
 {
     nlohmann::json j;
     j["img_name"] = img_name;
@@ -247,7 +246,7 @@ void send_image_file(IConnection *con, std::string img_name, int fd)
         // Send the compressed file
         send_vector(fd, file_data, compressedSize);
     }
-    catch (const std::exception &e)
+    catch (const std::exception& e)
     {
         std::cerr << e.what() << '\n';
         std::cout << "Error sending data" << std::endl;
@@ -312,7 +311,7 @@ void alert_listener()
             // update
             db->put(K_ALERTS, alerts_in_db.dump());
         }
-        catch (const std::exception &e)
+        catch (const std::exception& e)
         {
             std::string message = "Error processing alert: ";
             std::cerr << message << e.what() << std::endl;
@@ -375,7 +374,7 @@ void run_emergency_listener(int clientFd)
             db->put(K_EMERGENCY, emergency_in_db.dump());
             // End connection and exit
         }
-        catch (const std::exception &e)
+        catch (const std::exception& e)
         {
             std::string message = "Error processing emergency: ";
             std::cerr << message << e.what() << std::endl;
@@ -434,7 +433,7 @@ void start_db()
 
         std::cout << "Database inicialized." << std::endl;
     }
-    catch (const std::exception &e)
+    catch (const std::exception& e)
     {
         std::cerr << e.what() << '\n';
     }
@@ -491,12 +490,12 @@ void start_http_server()
 {
     httplib::Server srv;
 
-    srv.Get("/hi", [](const httplib::Request &, httplib::Response &res) {
+    srv.Get("/hi", [](const httplib::Request&, httplib::Response& res) {
         std::cout << "GET /hi" << std::endl;
         res.set_content("Hello World!", "text/plain");
     });
 
-    srv.Get("/supplies", [](const httplib::Request &, httplib::Response &res) {
+    srv.Get("/supplies", [](const httplib::Request&, httplib::Response& res) {
         std::string message = "Getting supplies...";
         generate_log(message);
         std::cout << message << std::endl;
@@ -514,7 +513,7 @@ void start_http_server()
         }
     });
 
-    srv.Get("/database", [](const httplib::Request &, httplib::Response &res) {
+    srv.Get("/database", [](const httplib::Request&, httplib::Response& res) {
         std::string message = "Getting database...";
         std::cout << message << std::endl;
         generate_log(message);
@@ -546,7 +545,7 @@ void start_http_server()
         }
     });
 
-    srv.Get("/alert", [](const httplib::Request &, httplib::Response &res) {
+    srv.Get("/alert", [](const httplib::Request&, httplib::Response& res) {
         std::string message = "Getting alerts...";
         std::cout << message << std::endl;
         generate_log(message);
@@ -572,7 +571,7 @@ void start_http_server()
         }
     });
 
-    srv.Post("/setsupplies", [](const httplib::Request &req, httplib::Response &res) {
+    srv.Post("/setsupplies", [](const httplib::Request& req, httplib::Response& res) {
         std::string message = "Setting supplies...";
         std::cout << message << std::endl;
         generate_log(message);

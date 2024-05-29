@@ -18,13 +18,16 @@
 #include <iostream>
 
 EdgeDetection::EdgeDetection(float lowThreshold, float highThreshold, float sigma)
-    : m_lowThreshold(lowThreshold), m_highThreshold(highThreshold), m_sigma(sigma)
+    : m_lowThreshold(lowThreshold)
+    , m_highThreshold(highThreshold)
+    , m_sigma(sigma)
 {
 }
 
 void EdgeDetection::applyGaussianBlur()
 {
-    cv::Mat image_tmp(m_originalImage.rows + KERNEL_SIZE - 1, m_originalImage.cols + KERNEL_SIZE - 1,
+    cv::Mat image_tmp(m_originalImage.rows + KERNEL_SIZE - 1,
+                      m_originalImage.cols + KERNEL_SIZE - 1,
                       m_originalImage.type());        // Necessary to handle borders
     cv::Mat kernel(KERNEL_SIZE, KERNEL_SIZE, CV_64F); // CV_64F cuz it's storing  double
     double kmean = KERNEL_SIZE / 2;                   // To calculate the gaussian fucntion
@@ -263,8 +266,8 @@ void EdgeDetection::nonMaximumSuppression()
     m_imageFileOperations->saveImage(img_path, m_cannyEdges);
 }
 
-void EdgeDetection::checkContours(cv::Mat &strongEdges, const cv::Mat &weakEdges, int row, int col, int prevRow,
-                                  int prevCol)
+void EdgeDetection::checkContours(
+    cv::Mat& strongEdges, const cv::Mat& weakEdges, int row, int col, int prevRow, int prevCol)
 {
     // Return if the bridge is completed
     if (strongEdges.at<bool>(row, col))
@@ -298,8 +301,8 @@ void EdgeDetection::checkContours(cv::Mat &strongEdges, const cv::Mat &weakEdges
 
 void EdgeDetection::applyLinkingAndHysteresis()
 {
-    const auto &rows = m_cannyEdges.rows;
-    const auto &cols = m_cannyEdges.cols;
+    const auto& rows = m_cannyEdges.rows;
+    const auto& cols = m_cannyEdges.cols;
 
     // Initialize matrices for strong and weak edges using OpenCV matrices for better performance
     cv::Mat strongEdges = cv::Mat::zeros(rows, cols, CV_32F);
@@ -337,7 +340,7 @@ void EdgeDetection::applyLinkingAndHysteresis()
     m_imageFileOperations->saveImage(img_path, m_cannyEdges);
 }
 
-void EdgeDetection::cannyEdgeDetection(const std::string &inputImage)
+void EdgeDetection::cannyEdgeDetection(const std::string& inputImage)
 {
     m_imageFileOperations = std::make_shared<ImageFileOperations>();
 

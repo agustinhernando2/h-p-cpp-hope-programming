@@ -24,12 +24,12 @@
 std::counting_semaphore<3> semaphore(1);
 
 // Localhost IP
-const char *localhost_ipv4 = "127.0.0.1";
-const char *localhost_ipv6 = "::1";
-const char *all_interfaces = "0.0.0.0";
+const char* localhost_ipv4 = "127.0.0.1";
+const char* localhost_ipv6 = "::1";
+const char* all_interfaces = "0.0.0.0";
 // Localhost ports
-const char *tcp4_port = "8080";
-const char *tcp6_port = "8081";
+const char* tcp4_port = "8080";
+const char* tcp6_port = "8081";
 const int http_port = 8888;
 
 // Rocks db path
@@ -79,7 +79,7 @@ int run_server(std::string address, std::string port, int protocol);
 /**
  * @brief Handle the client connections
  */
-void handle_client(IConnection *server, int clientFd);
+void handle_client(IConnection* server, int clientFd);
 
 /**
  * @brief Initialize the server http to receive GET and POST requests
@@ -104,8 +104,8 @@ void signal_handler(int signal);
 
 int get_image(std::string message, int clientFd);
 
-void send_image_file(IConnection *con, std::string img_name, int fd);
+void send_image_file(IConnection* con, std::string img_name, int fd);
 
-std::string get_image_selected(IConnection *con, int fd);
+std::string get_image_selected(IConnection* con, int fd);
 
-void send_images_names(IConnection *con, int clientFd);
+void send_images_names(IConnection* con, int clientFd);

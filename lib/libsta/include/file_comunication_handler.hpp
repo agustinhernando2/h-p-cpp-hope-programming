@@ -51,8 +51,8 @@ void decompressFile(std::vector<char> file_data, std::string output_filename);
  * @return std::vector<char> Vector with the compressed data
  * @throw std::runtime_error If there is an error reading the input file
  */
-std::vector<char> compressFile(const std::string &input_filename, const std::string &compressed_filename,
-                               int *original_size, unsigned long *compressed_size);
+std::vector<char> compressFile(const std::string& input_filename, const std::string& compressed_filename,
+                               int* original_size, unsigned long* compressed_size);
 
 /**
  * @brief Function to write a vector to a file
@@ -61,14 +61,14 @@ std::vector<char> compressFile(const std::string &input_filename, const std::str
  * @param size Size of the data
  * @return void
  */
-void write_file(const std::string &compressed_filename, std::vector<char> &data, unsigned long size);
+void write_file(const std::string& compressed_filename, std::vector<char>& data, unsigned long size);
 
 /**
  * @brief Function to generate a log
  * @param filename Name of the file to save the log
  * @param timestamp Timestamp of the log
  */
-int generate_log(const std::string &message);
+int generate_log(const std::string& message);
 
 /**
  * @brief Function to get the current timestamp

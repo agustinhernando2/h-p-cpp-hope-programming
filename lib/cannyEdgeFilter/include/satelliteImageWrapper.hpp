@@ -27,12 +27,12 @@
  */
 class SatelliteImageWrapper
 {
-  public:
+public:
     /**
      * @brief Construct a new Satellite Image Wrapper object
      * @param filename Filename to open
      */
-    SatelliteImageWrapper(const std::string &filename);
+    SatelliteImageWrapper(const std::string& filename);
 
     /**
      * @brief Destroy the Satellite Image Wrapper object
@@ -51,8 +51,8 @@ class SatelliteImageWrapper
      */
     bool isValid() const;
 
-  private:
-    GDALDataset *m_dataset;
+private:
+    GDALDataset* m_dataset;
 };
 
 #endif /* _SATELLITE_IMAGE_WRAPPER_HPP */

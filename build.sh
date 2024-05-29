@@ -19,8 +19,7 @@ SOURCE_FILES+=$(find $PROJECT_PATH/lib/cannyEdgeFilter/include -type f \( -name 
 SOURCE_FILES+=$(find $PROJECT_PATH/lib/rocksDbWrapper/src -type f \( -name "*.cpp" -or -name "*.hpp" -or -name "*.h" -or -name "*.c" \) | tr "\n" " ")
 SOURCE_FILES+=$(find $PROJECT_PATH/lib/rocksDbWrapper/include -type f \( -name "*.cpp" -or -name "*.hpp" -or -name "*.h" -or -name "*.c" \) | tr "\n" " ")
 
-clang-format --style=Microsoft -i $SOURCE_FILES
-
+clang-format -i $SOURCE_FILES
 
 # Ruta del directorio build
 BUILD_DIR="build"

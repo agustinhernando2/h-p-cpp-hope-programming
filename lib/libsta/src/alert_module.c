@@ -17,7 +17,7 @@ void run_alert_module()
     }
 }
 
-void simulate_temperature_sensor(char *entry)
+void simulate_temperature_sensor(char* entry)
 {
     str_temp str_temp;
     mess_t buffer;

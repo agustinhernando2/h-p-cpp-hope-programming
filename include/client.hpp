@@ -34,8 +34,8 @@ const Option option4 = {4, "get_img_filtered", "Get image filtered from server"}
 const Option option5 = {5, "end_conn", "End Connection"};
 
 // Constants for user
-const char *ADMIN_USER = "admin";
-const char *ADMIN_PASS = "admin";
+const char* ADMIN_USER = "admin";
+const char* ADMIN_PASS = "admin";
 const int ADMIN_LEVEL = 1;
 const int NORMAL_LEVEL = 0;
 
@@ -43,13 +43,13 @@ const int NORMAL_LEVEL = 0;
 const std::string img_path = "img_cli/";
 
 // Localhost IP
-const char *localhost_ipv4 = "127.0.0.1";
-const char *localhost_ipv6 = "::1";
+const char* localhost_ipv4 = "127.0.0.1";
+const char* localhost_ipv6 = "::1";
 // Localhost ports
-const char *tcp4_port = "8080";
-const char *udp4_port = "8090";
-const char *tcp6_port = "8081";
-const char *udp6_port = "8091";
+const char* tcp4_port = "8080";
+const char* udp4_port = "8090";
+const char* tcp6_port = "8081";
+const char* udp6_port = "8091";
 
 // flag to option 1 in loop
 int flag_opt1 = 0;
@@ -77,19 +77,19 @@ void end_client_conn();
 
 void signal_handler(int signal);
 
-void send_get_options_image_filtered_command(UserCredentials user, int serverSocket, std::unique_ptr<IConnection> &con);
+void send_get_options_image_filtered_command(UserCredentials user, int serverSocket, std::unique_ptr<IConnection>& con);
 
 void send_get_image_filtered_command(UserCredentials user, std::string img_name, int serverSocket,
-                                     std::unique_ptr<IConnection> &con);
+                                     std::unique_ptr<IConnection>& con);
 
-void get_image_to_get(std::string &response);
+void get_image_to_get(std::string& response);
 
-void send_get_supplies_command(UserCredentials user, int serverSocket, std::unique_ptr<IConnection> &con);
+void send_get_supplies_command(UserCredentials user, int serverSocket, std::unique_ptr<IConnection>& con);
 
 void send_image_filtering_command(UserCredentials user, std::string img_name, int nproc, int serverSocket,
-                                  std::unique_ptr<IConnection> &con);
+                                  std::unique_ptr<IConnection>& con);
 
 void send_set_supplies_command(UserCredentials user, std::string sup_type, std::string sup_name, std::string sup_amount,
-                               int serverSocket, std::unique_ptr<IConnection> &con);
+                               int serverSocket, std::unique_ptr<IConnection>& con);
 
 std::string get_image_name(std::string response);

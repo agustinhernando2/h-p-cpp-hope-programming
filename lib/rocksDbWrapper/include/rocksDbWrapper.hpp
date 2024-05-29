@@ -26,12 +26,12 @@
  */
 class RocksDbWrapper
 {
-  public:
+public:
     /**
      * @brief Constructor.
      * @param pathDatabase Path to the database.
      */
-    explicit RocksDbWrapper(const std::string &pathDatabase);
+    explicit RocksDbWrapper(const std::string& pathDatabase);
 
     /**
      * @brief Put a key-value pair in the database.
@@ -40,7 +40,7 @@ class RocksDbWrapper
      *
      * @note If the key already exists, the value will be overwritten.
      */
-    void put(const std::string &key, const rocksdb::Slice &value);
+    void put(const std::string& key, const rocksdb::Slice& value);
 
     /**
      * @brief Get a value from the database.
@@ -51,14 +51,14 @@ class RocksDbWrapper
      * @return bool True if the operation was successful.
      * @return bool False if the key was not found.
      */
-    bool get(const std::string &key, std::string &value);
+    bool get(const std::string& key, std::string& value);
 
     /**
      * @brief Delete a key-value pair from the database.
      *
      * @param key Key to delete.
      */
-    void delete_(const std::string &key);
+    void delete_(const std::string& key);
 
     /**
      * @brief Get all keys from the database.
@@ -67,7 +67,7 @@ class RocksDbWrapper
      */
     std::vector<std::string> getAllKeys();
 
-  private:
+private:
     std::shared_ptr<rocksdb::DB> m_database; ///< Database instance.
 };
 

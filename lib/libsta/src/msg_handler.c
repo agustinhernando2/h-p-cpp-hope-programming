@@ -1,7 +1,7 @@
 
 #include <msg_handler.h>
 
-void send_alert_msqueue(mess_t *send_buffer)
+void send_alert_msqueue(mess_t* send_buffer)
 {
     if (msg_id == -1 || msg_id == 0)
     {

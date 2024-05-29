@@ -42,8 +42,8 @@ void decompressFile(std::vector<char> file_data, std::string output_filename)
     std::vector<char> decompressedData(file_data.size() *
                                        10);            // Guess the decompressed size as 10 times the compressed size
     uLongf decompressedSize = decompressedData.size(); // Decompressed size
-    if (uncompress(reinterpret_cast<Bytef *>(decompressedData.data()), &decompressedSize, // Uncompress the data
-                   reinterpret_cast<const Bytef *>(file_data.data()), file_data.size()) != Z_OK)
+    if (uncompress(reinterpret_cast<Bytef*>(decompressedData.data()), &decompressedSize, // Uncompress the data
+                   reinterpret_cast<const Bytef*>(file_data.data()), file_data.size()) != Z_OK)
     {
         throw std::runtime_error("Decompression failed!");
     }
@@ -58,8 +58,8 @@ void decompressFile(std::vector<char> file_data, std::string output_filename)
     generate_log(message);
 }
 
-std::vector<char> compressFile(const std::string &input_filename, const std::string &compressed_filename,
-                               int *original_size, unsigned long *compressed_size)
+std::vector<char> compressFile(const std::string& input_filename, const std::string& compressed_filename,
+                               int* original_size, unsigned long* compressed_size)
 {
 
     // Verifica si el archivo existe
@@ -88,8 +88,8 @@ std::vector<char> compressFile(const std::string &input_filename, const std::str
     // Compress input data
     unsigned long compressedSize = compressBound(inputSize);
     std::vector<char> compressedData(compressedSize); // Create a vector to store the compressed data
-    if (compress(reinterpret_cast<Bytef *>(compressedData.data()), &compressedSize,
-                 reinterpret_cast<const Bytef *>(inputData.data()), inputSize) != Z_OK)
+    if (compress(reinterpret_cast<Bytef*>(compressedData.data()), &compressedSize,
+                 reinterpret_cast<const Bytef*>(inputData.data()), inputSize) != Z_OK)
     {
         throw std::runtime_error("Compression failed!");
     }
@@ -101,7 +101,7 @@ std::vector<char> compressFile(const std::string &input_filename, const std::str
     return compressedData;
 }
 
-void write_file(const std::string &compressed_filename, std::vector<char> &data, unsigned long size)
+void write_file(const std::string& compressed_filename, std::vector<char>& data, unsigned long size)
 {
     // Write compressed data to file
     std::ofstream file(compressed_filename, std::ios::binary);
@@ -143,7 +143,7 @@ std::string get_current_timestamp()
     return timestamp.str();
 }
 
-int generate_log(const std::string &message)
+int generate_log(const std::string& message)
 {
     std::ofstream file;
     file.open(logfilename, std::ios_base::app); // Open in append mode

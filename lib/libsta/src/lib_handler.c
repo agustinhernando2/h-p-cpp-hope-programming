@@ -1,8 +1,8 @@
 #include <lib_handler.h>
 
-int read_file(char *filename, char **buffer)
+int read_file(char* filename, char** buffer)
 {
-    FILE *file;
+    FILE* file;
     // Open a file in read mode
     file = fopen(filename, "r");
     if (file == NULL)
@@ -39,7 +39,7 @@ int read_file(char *filename, char **buffer)
         return 1;
     }
     // Store the content of the file
-    char *string = malloc((size_t)fsize + 1);
+    char* string = malloc((size_t)fsize + 1);
     if (string == NULL)
     {
         fclose(file);
@@ -65,14 +65,14 @@ int read_file(char *filename, char **buffer)
 
     return 0;
 }
-int write_file(char *filename, char *buffer)
+int write_file(char* filename, char* buffer)
 {
     if ((buffer == NULL) | (strlen(buffer) == 0))
     {
         fprintf(stderr, "%s:%d: buffer error \n", __FILE__, __LINE__);
         return 0;
     }
-    FILE *file;
+    FILE* file;
     // Open a file in write mode
     file = fopen(filename, "w");
     if (file == NULL)
@@ -93,7 +93,7 @@ int write_file(char *filename, char *buffer)
     return 0;
 }
 
-void free_ptr(char **json_file_buffer)
+void free_ptr(char** json_file_buffer)
 {
     if (*json_file_buffer != NULL)
     {
@@ -102,7 +102,7 @@ void free_ptr(char **json_file_buffer)
     }
 }
 
-void error_handler(const char *error_message, char *file, int line)
+void error_handler(const char* error_message, char* file, int line)
 {
     fprintf(stderr, "%s:%d: Error: %s", file, line, error_message);
     if (errno != 0)
@@ -112,12 +112,12 @@ void error_handler(const char *error_message, char *file, int line)
     fprintf(stderr, "\n");
 }
 
-int generate_log(char *message)
+int generate_log(char* message)
 {
     char timestamp[SIZE_TIME];
     set_timestamp(timestamp, SIZE_TIME);
 
-    FILE *file;
+    FILE* file;
     file = fopen(FILENAME_, "a");
     if (file == NULL)
     {
@@ -129,10 +129,10 @@ int generate_log(char *message)
     return 0;
 }
 
-void set_timestamp(char *timestamp, size_t t_size)
+void set_timestamp(char* timestamp, size_t t_size)
 {
     time_t current_time;
-    struct tm *time_info;
+    struct tm* time_info;
     time(&current_time);
     time_info = localtime(&current_time);
     strftime(timestamp, t_size, "%a %b %d %H:%M:%S %Y", time_info);

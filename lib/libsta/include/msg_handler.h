@@ -37,7 +37,7 @@ extern "C"
     /**
      * @brief Send the alert to the message queue
      */
-    void send_alert_msqueue(mess_t *send_buffer);
+    void send_alert_msqueue(mess_t* send_buffer);
 
 #ifdef __cplusplus
 }
