@@ -3,6 +3,8 @@ project(
   "server"
   LANGUAGES CXX 
 )
+# Flags de compilación
+set(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra -Wconversion -fprofile-arcs -ftest-coverage")
 
 # Create the executable
 add_executable(${PROJECT_NAME} server.cpp)

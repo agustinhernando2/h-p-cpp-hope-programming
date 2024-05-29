@@ -10,7 +10,8 @@ project(
 )
 
 set(CMAKE_C_STANDARD 17)
-
+# Flags de compilación
+set(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra -Wconversion -std=gnu11 -fprofile-arcs -ftest-coverage")
 # Include the cJSON library
 include_directories(../../external/cJSON)
 

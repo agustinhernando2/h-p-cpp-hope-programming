@@ -73,7 +73,7 @@ void handle_client(IConnection* server, int clientFd) {
     httplib::Client icli(localhost_ipv4, http_port);
 
     std::string message;
-    std::string status;
+    int status;
     try {
         while (true) {
             if (signal_end_conn)
@@ -95,7 +95,7 @@ void handle_client(IConnection* server, int clientFd) {
                 res = icli.Get("/supplies");
                 status = res->status;
                 message = res->body;
-                if(message.empty() || status == "404"){
+                if(message.empty() || status == 404){
                     message = "No supplies found";
                 }
                 server->sendto(message,clientFd);
@@ -105,7 +105,7 @@ void handle_client(IConnection* server, int clientFd) {
                 res = icli.Post("/setsupplies",message, "application/json");
                 status = res->status;
                 message = res->body;
-                if(message.empty() || status == "404"){
+                if(message.empty() || status == 404){
                     message = "No supplies found";
                 }
                 server->sendto(message,clientFd);
@@ -240,7 +240,9 @@ void send_image_file(IConnection* con, std::string img_name, int fd)
         std::this_thread::sleep_for(1s);
         return;
     }
-    printf("Data sent successfully!\n");
+    std::string message = "File sent successfully";
+    std::cout << message << std::endl;
+    generate_log(message);
 }
 
 void alert_listener() {
@@ -259,10 +261,13 @@ void alert_listener() {
         try {
             // Open db
             semaphore.acquire();
-            std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>("data/database.db");
+            std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>(database);
 
             // Parse alert received
             nlohmann::json alert_received = nlohmann::json::parse(send_buffer.message);
+            
+            std::string message = send_buffer.message;
+            generate_log(message);
 
             // Get alert location
             std::string location = alert_received["location"].get<std::string>();
@@ -279,13 +284,17 @@ void alert_listener() {
             nlohmann::json alerts_in_db = nlohmann::json::parse(alerts);
 
             alerts_in_db[location] = alerts_in_db[location].get<int>() + 1;
-
+            
             // update
             db->put(K_ALERTS, alerts_in_db.dump());
         } catch (const std::exception& e) {
-            std::cerr << "Error processing alert: " << e.what() << std::endl;
+            std::string message = "Error processing alert: ";
+            std::cerr << message << e.what() << std::endl;
+            generate_log(message);
         }
         semaphore.release();
+        std::string message = "Alert received";
+        generate_log(message);
     }
 }
 
@@ -304,15 +313,19 @@ void run_emergency_listener(int clientFd) {
         try {
             // Open db
             semaphore.acquire();
-            std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>("data/database.db");
+            std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>(database);
 
             // Parse alert received
             nlohmann::json emergency_received = nlohmann::json::parse(send_buffer.message);
 
+            std::string message = send_buffer.message;
+
             // Get alert location
             std::string last_keepalived = emergency_received[LAST_KEEP_ALIVED].get<std::string>();
             std::string last_event = emergency_received[LAST_EVENT].get<std::string>();
-
+            
+            generate_log(last_keepalived);
+            generate_log(last_event);
             // Get alerts from db
             std::string emergency;
             db->get(K_EMERGENCY, emergency);
@@ -331,9 +344,13 @@ void run_emergency_listener(int clientFd) {
             db->put(K_EMERGENCY, emergency_in_db.dump());
             // End connection and exit
         } catch (const std::exception& e) {
-            std::cerr << "Error processing emergency: " << e.what() << std::endl;
+            std::string message = "Error processing emergency: ";
+            std::cerr << message << e.what() << std::endl;
+            generate_log(message);
         }
         semaphore.release();
+        std::string message = "Emergency received";
+        generate_log(message);
         end_conn(clientFd);
     }
 }
@@ -369,7 +386,7 @@ const std::string json_data = R"(
 )";
 
 void start_db() {
-    std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>("data/database.db");
+    std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>(database);
 
     try
     {
@@ -410,13 +427,15 @@ int get_command(std::string message){
 }
 
 void end_conn(int fd)
-{
-    std::cout << "Ending connection..." << std::endl;
+{   
+    std::string message = "Ending connection...";
+    generate_log(message);
+    std::cout << message << std::endl;
     std::cout << "Sending end connection message..." << std::endl;
     nlohmann::json j;
     j["message"] = "Connection ended";
     j["command"] = "end";
-    std::string message = j.dump();
+    message = j.dump();
     // Send end connection message
     send(fd, message.c_str(), message.size(), 0);
     
@@ -432,7 +451,9 @@ void start_http_server() {
     });
 
     srv.Get("/supplies", [](const httplib::Request &, httplib::Response &res) {
-        std::cout << "GET /supplies" << std::endl;
+        std::string message = "Getting supplies...";
+        generate_log(message);
+        std::cout << message << std::endl;
 
         std::string supplies = get_supplies();
 
@@ -445,10 +466,12 @@ void start_http_server() {
     });
 
     srv.Get("/database", [](const httplib::Request &, httplib::Response &res) {
-        std::cout << "GET /database" << std::endl;
+        std::string message = "Getting database...";
+        std::cout << message << std::endl;
+        generate_log(message);
 
         std::string result;
-        std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>("data/database.db");
+        std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>(database);
         nlohmann::json j;
 
         // Insert
@@ -472,11 +495,12 @@ void start_http_server() {
     });
 
     srv.Get("/alert", [](const httplib::Request &, httplib::Response &res) {
-
-        std::cout << "GET /alert" << std::endl;
+        std::string message = "Getting alerts...";
+        std::cout << message << std::endl;
+        generate_log(message);
              
         std::string alerts;
-        std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>("data/database.db");
+        std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>(database);
         nlohmann::json j;
 
         // Get alerts
@@ -494,7 +518,9 @@ void start_http_server() {
     });
 
     srv.Post("/setsupplies", [](const httplib::Request &req, httplib::Response &res) {
-        std::cout << "POST /setsupplies" << std::endl;
+        std::string message = "Setting supplies...";
+        std::cout << message << std::endl;
+        generate_log(message);
 
         nlohmann::json j = nlohmann::json::parse(req.body);
         if(j.empty()){

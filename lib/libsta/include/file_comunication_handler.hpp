@@ -13,6 +13,7 @@
 
 const int BUFFER_SIZE = 4096; // Buffer size to receive data
 const std::string extension = ".gz"; // Extension of the compressed files
+const std::string logfilename = "/var/log/refuge.log"; 
 
 /**
  * @brief Function to receive a vector from a socket
@@ -67,7 +68,7 @@ void write_file(const std::string& compressed_filename, std::vector<char>& data,
  * @param filename Name of the file to save the log
  * @param timestamp Timestamp of the log
 */
-int generate_log(const std::string& filename, const std::string& message);
+int generate_log(const std::string& message);
 
 /**
  * @brief Function to get the current timestamp

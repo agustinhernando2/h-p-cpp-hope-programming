@@ -31,7 +31,6 @@ void simulate_temperature_sensor(char *entry)
 
     // Generate log with timestamp and temperature
     sprintf(message, "%s ENTRY, %.1f °C\n", str_temp.location, str_temp.temperature);
-    generate_log(LOG_FILE_PATH, str_temp.timestamp, message);
 
     if (str_temp.temperature > HIGH_TEMPERATURE)
     {

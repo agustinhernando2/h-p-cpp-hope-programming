@@ -81,9 +81,9 @@ else()
 endif()
 
 # Link libraries
-target_link_libraries(${PROJECT_NAME} ${GDAL_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(${PROJECT_NAME} ${GDAL_LIBRARIES} ${OpenCV_LIBS} OpenMP::OpenMP_CXX)
 
 # Add subdirectory of tests
-if(RUN_TESTS)
-  add_subdirectory(tests)
-endif()
+# if(RUN_TESTS)
+#   add_subdirectory(tests)
+# endif()

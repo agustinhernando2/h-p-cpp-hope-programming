@@ -28,11 +28,6 @@
 #define ALERT 1
 #define K_ALERTS "alerts"
 
-#define SIZE_TIME 20
-// log file
-#define LOG_FILE_PATH "data/temperature.log"
-#define JSON_FILE_PATH "data/state_summary.json"
-
 typedef struct
 {
     char timestamp[SIZE_TIME];

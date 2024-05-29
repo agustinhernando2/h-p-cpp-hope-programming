@@ -193,13 +193,13 @@ std::string get_img_name(std::string response)
     int option = 0;
     while (true)
     {
-        for (int i = 0; i < img_names.size(); i++)
+        for (int i = 0; i < (int) img_names.size(); i++)
         {
             std::cout << i + 1 << ". " << img_names[i] << std::endl;
         }
         std::cout << "Enter the option number: " << std::endl;
         std::cin >> option;
-        if (option < 1 || option > img_names.size())
+        if (option < 1 || option > (int) img_names.size())
         {
             std::cout << "Invalid option. Please enter a valid number." << std::endl;
         }
@@ -403,7 +403,7 @@ void signal_handler(int signal)
     switch (signal)
     {
     case SIGTSTP:
-        exit(EXIT_SUCCESS);
+        end_client_conn();
         break;
     default:
         break;

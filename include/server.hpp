@@ -31,8 +31,10 @@ const char* all_interfaces = "0.0.0.0";
 const char* tcp4_port = "8080";
 const char* tcp6_port = "8081";
 const int http_port = 8888;
+
 // Rocks db path
-const std::string rockdb_path = "data/database.db";
+const std::string database = "data/database.db";
+
 // Path to save the images
 const std::string img_path = "img_svr/";
 // Queue message id

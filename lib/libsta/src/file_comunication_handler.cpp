@@ -27,6 +27,11 @@ std::vector<char> receive_vector(int sockfd, std::string output_filename, unsign
     std::cout << "Received compressed data successfully!" << std::endl;
     write_file(output_filename, file_data, compressedSize);
 
+    std::string message = "Received compressed data successfully! Process id: " + std::to_string(getpid()) + " "
+        + std::to_string(dataSize) + " bytes" + " Original size: " 
+        + std::to_string(compressedSize) + " bytes" + " Compression ratio: " 
+        + std::to_string((double)compressedSize / dataSize);
+    generate_log(message);    
     return file_data;
 }
 
@@ -41,6 +46,12 @@ void decompressFile(std::vector<char> file_data, std::string output_filename){
     printf("Decompressed size: %lu bytes\n", decompressedSize);
     // Write decompressed data to file
     write_file(output_filename, decompressedData, decompressedSize);
+
+    std::string message = "Decompressed data successfully! Decompressed size: Process id" + std::to_string(getpid()) + " "
+        + std::to_string(decompressedSize) + " bytes" + " Original size: " 
+        + std::to_string(file_data.size()) + " bytes" + " Compression ratio: " 
+        + std::to_string((double)file_data.size() / (double) decompressedSize);
+    generate_log(message);
 }
 
 std::vector<char> compressFile(const std::string& input_filename, const std::string& compressed_filename, int* original_size, unsigned long* compressed_size){
@@ -75,7 +86,7 @@ std::vector<char> compressFile(const std::string& input_filename, const std::str
 
     write_file(compressed_filename, compressedData, compressedSize);
 
-    *original_size = inputSize;
+    *original_size = (int) inputSize;
     *compressed_size = compressedSize;
     return compressedData;
 }
@@ -93,7 +104,7 @@ void write_file(const std::string& compressed_filename, std::vector<char>& data,
 }
 
 void send_vector(int sockfd, std::vector<char> file_data, unsigned long compressedSize){
-    uint32_t dataSize = htonl(compressedSize);  // Convertir a formato de red
+    uint32_t dataSize = htonl( (uint32_t) compressedSize);  // Convertir a formato de red
     if (write(sockfd, &dataSize, sizeof(dataSize)) < 0){ // Send the data size
         throw std::runtime_error("ERROR writing data size to socket");    
     }
@@ -118,11 +129,11 @@ std::string get_current_timestamp() {
     return timestamp.str();
 }
 
-int generate_log(const std::string& filename, const std::string& message) {
+int generate_log(const std::string& message) {
     std::ofstream file;
-    file.open(filename, std::ios_base::app); // Open in append mode
+    file.open(logfilename, std::ios_base::app); // Open in append mode
     if (!file.is_open()) {
-        std::cerr << "Error opening file: " << filename << " in " << __FILE__ << " at line " << __LINE__ << std::endl;
+        std::cerr << "Error opening file: " << logfilename << " in " << __FILE__ << " at line " << __LINE__ << std::endl;
         return 1;
     }
     file << get_current_timestamp() << ", " << message << std::endl;

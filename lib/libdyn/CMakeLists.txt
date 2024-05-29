@@ -8,7 +8,8 @@ project(
   DESCRIPTION "CMake C project template for operating systems II"
   LANGUAGES C
 )
-
+# Flags de compilación
+set(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra -Wconversion -std=gnu11 -fprofile-arcs -ftest-coverage")
 # Define the C standard, we are going to use std17
 set(CMAKE_C_STANDARD 17)
 

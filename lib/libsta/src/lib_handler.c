@@ -112,10 +112,13 @@ void error_handler(const char *error_message, char *file, int line)
     fprintf(stderr, "\n");
 }
 
-int generate_log(char *filename, char *timestamp, char *message)
-{
+int generate_log(char *message)
+{   
+    char timestamp[SIZE_TIME];
+    set_timestamp(timestamp, SIZE_TIME);
+
     FILE *file;
-    file = fopen(filename, "a");
+    file = fopen(FILENAME_, "a");
     if (file == NULL)
     {
         error_handler("Error opening file", __FILE__, __LINE__);

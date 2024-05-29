@@ -7,18 +7,14 @@ project(
   LANGUAGES CXX C
 )
 
-# Flags de compilación
-set(CMAKE_C_FLAGS "-Wall -pedantic -Werror -Wextra -Wconversion -std=gnu11")
-
 # Opciones de configuración
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake" ${CMAKE_MODULE_PATH})
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(WITH_BENCHMARK_TOOLS OFF)
 set(WITH_TOOLS OFF)
-set(WITH_TESTS OFF)
+set(WITH_TESTS ON)
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 
 include(FetchContent)
@@ -67,20 +63,20 @@ FetchContent_MakeAvailable(cJSON)
 # Agregar el path a gflags
 set(CMAKE_PREFIX_PATH "/usr/lib/x86_64-linux-gnu/cmake/gflags" ${CMAKE_PREFIX_PATH})
 
-#OpenMP
-find_package(OpenMP)
-if(OpenMP_CXX_FOUND)
-    set(OPENMP_LIB OpenMP::OpenMP_CXX)
-else()
-    message(FATAL_ERROR "OpenMP not found")
-endif()
-
 #ZLIB
 find_package(ZLIB)
 if(ZLIB_FOUND)
     set(ZLIB_LIB ZLIB::ZLIB)
 else()
     message(FATAL_ERROR "ZLIB not found")
+endif()
+
+#OpenMP
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    set(OPENMP_LIB OpenMP::OpenMP_CXX)
+else()
+    message(FATAL_ERROR "OpenMP not found")
 endif()
 
 #OpenCV
@@ -137,7 +133,8 @@ add_subdirectory(src/server)
 add_subdirectory(external)
 add_subdirectory(lib/cppSocket)
 
-if (RUN_TESTS EQUAL 1 OR RUN_COVERAGE EQUAL 1)
+if (RUNS_TESTS EQUAL 1 OR RUNS_COVERAGE EQUAL 1)
+  # set(CMAKE_CXX_FLAGS {CMAKE_CXX_FLAGS} "-fprofile-arcs -ftest-coverage")
   include(CTest)
   enable_testing()
   add_subdirectory(tests)

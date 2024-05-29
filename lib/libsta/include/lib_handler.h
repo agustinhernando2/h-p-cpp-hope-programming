@@ -5,6 +5,9 @@
 #include <string.h>
 #include <time.h>
 
+#define FILENAME_ "/var/log/refuge.log"
+#define SIZE_TIME 20
+
 /**
  * @brief Reads the content of a file and stores it in a buffer.
  *        Allocates memory for the buffer using malloc.
@@ -41,7 +44,7 @@ void error_handler(const char *error_message, char *file, int line);
 /**
  * @brief Generate new line log
  */
-int generate_log(char *filename, char *timestamp, char *message);
+int generate_log(char *message);
 
 /**
  * @brief Set the timestamp

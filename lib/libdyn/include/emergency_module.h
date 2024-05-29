@@ -12,7 +12,6 @@
 #define K_EMERGENCY "emergency"
 #define SIZE_TIME 20
 #define EMERGENCY 2
-#define LOG_E_FILE_PATH "data/emergency.log"
 
 
 #ifdef __cplusplus

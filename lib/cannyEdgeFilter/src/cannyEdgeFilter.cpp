@@ -99,7 +99,7 @@ void EdgeDetection::applyGaussianBlur()
 
     // 3. Apply filter
 
-#pragma omp parallel collapse(2)
+#pragma omp parallel for collapse(2)
     for (int imrow = half_kernel_size; imrow < image_tmp.rows - half_kernel_size; imrow++)
     {
         for (int imcol = half_kernel_size; imcol < image_tmp.cols - half_kernel_size; imcol++)
@@ -282,18 +282,21 @@ void EdgeDetection::checkContours(
         return;
     }
 
-// Now check all the connected pixels for any weak contours, avoid same pixel and previous pixel
-#pragma omp parallel for collapse(2)
+    // Now check all the connected pixels for any weak contours, avoid same pixel and previous pixel
+    // #pragma omp parallel for collapse(2) shared(strongEdges, weakEdges) private(side_row, side_col, row, col)
+    #pragma omp parallel for collapse(2)
     for (int side_row = row - 1; side_row < row + 1; ++side_row)
     {
         for (int side_col = col - 1; side_col < col + 1; ++side_col)
         {
             if ((side_col != prevCol && side_row != prevRow) && (side_col != col && side_row != row))
             {
+    // #pragma omp task firstprivate(side_row, side_col, row, col)
                 checkContours(strongEdges, weakEdges, side_row, side_col, row, col);
             }
         }
     }
+    // #pragma omp taskwait
 }
 
 void EdgeDetection::applyLinkingAndHysteresis()
