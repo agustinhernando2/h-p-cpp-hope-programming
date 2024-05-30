@@ -90,10 +90,6 @@ int main(int argc, char const* argv[])
                         std::cout << "Enter the supply amount: " << std::endl;
                         std::cin >> sup_amount;
 
-                        // to lower case
-                        boost::algorithm::to_lower(sup_type);
-                        boost::algorithm::to_lower(sup_name);
-                        boost::algorithm::to_lower(sup_amount);
                         // send set supplies command
                         send_set_supplies_command(user, sup_type, sup_name, sup_amount, serverSocket, con);
                         // receive response and print
@@ -105,8 +101,6 @@ int main(int argc, char const* argv[])
 
                         std::cout << "Enter the image name: " << std::endl;
                         std::cin >> img_name;
-                        // to lower case
-                        boost::algorithm::to_lower(img_name);
 
                         std::cout << "Enter the number of threads: " << std::endl;
                         std::cin >> nproc;

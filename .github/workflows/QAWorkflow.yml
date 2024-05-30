@@ -3,6 +3,7 @@ name: QA Workflow
 on:
   workflow_dispatch:
   pull_request:
+    # Pull request events
     types: [synchronize, opened, reopened, ready_for_review]
 
 jobs:
@@ -15,15 +16,11 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Update apt-get
-        run: sudo apt-get update
-
       - name: Install dependencies
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: doxygen gcovr lcov cppcheck graphviz clang-format valgrind bc libgdal-dev libopencv-dev librocksdb-dev libzip-dev libboost-all-dev
+          packages: doxygen gcovr lcov cppcheck graphviz clang-format valgrind bc libgdal-dev libopencv-dev librocksdb-dev libzip-dev
           version: 1.0
-
       - name: Run style check
         uses: ./.github/actions/style
 
