@@ -6,6 +6,8 @@ using namespace std::chrono_literals;
 int main()
 {
     // start_db();
+    // Create the message queue
+    msg_id = create_message_queue();
 
     std::signal(SIGTERM, signal_handler); // SIGTERM
 
@@ -273,6 +275,7 @@ void alert_listener()
         {
             // print errno
             perror("msgrcv error");
+            std::cerr << "1msg_id" << msg_id << std::endl;
             std::this_thread::sleep_for(1s);
             continue;
         }
@@ -332,6 +335,7 @@ void run_emergency_listener(int clientFd)
         {
             // print errno
             perror("msgrcv error");
+            std::cerr << "2msg_id" << msg_id << std::endl;
             std::this_thread::sleep_for(1s);
             continue;
         }
@@ -484,6 +488,10 @@ void end_conn(int fd)
     send(fd, message.c_str(), message.size(), 0);
 
     std::this_thread::sleep_for(2s);
+    // Close message queue
+    msgctl(msg_id, IPC_RMID, NULL);
+    // Close connection
+    close(fd);
     exit(EXIT_SUCCESS);
 }
 void start_http_server()

@@ -35,7 +35,14 @@ int main(int argc, char const* argv[])
 
     std::cout << "Connecting to " << address << ":" << port << std::endl;
 
-    con = std::make_unique<TCPv4Connection>(address, port, true);
+    if (is_ip_version_4)
+    {
+        con = std::make_unique<TCPv4Connection>(address, port, true);
+    }
+    else
+    {
+        con = std::make_unique<TCPv6Connection>(address, port, true);
+    }
     con->connect();
 
     serverSocket = con->getSocket();

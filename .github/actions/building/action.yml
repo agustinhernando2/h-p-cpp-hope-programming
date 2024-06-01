@@ -7,7 +7,7 @@ runs:
       - name: Configuration and compilation
         shell: bash
         run: |
-          echo "Running command: cmake -DCMAKE_BUILD_TYPE=Debug -DRUNS_COVERAGE=1 .. && make -j2"
+          echo "Running command: cmake -DRUNS_COVERAGE=1 -DRUNS_TESTS=1 .. && make -j2"
           mkdir -p build && cd build
           cmake -DRUNS_COVERAGE=1 -DRUNS_TESTS=1 .. && make -j2
 

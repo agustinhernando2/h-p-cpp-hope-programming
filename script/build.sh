@@ -1,5 +1,6 @@
 #!/bin/bash
-
+ # We only make check, not changes
+DOX_CONF_FILE=$(pwd)/Doxyfile
 # Obtenemos la ruta absoluta del directorio del proyecto
 PROJECT_PATH=$(pwd)
 
@@ -57,20 +58,19 @@ else
 fi
 
 
- # We only make check, not changes
-DOX_CONF_FILE=$(pwd)/Doxyfile
+
 
 # Append to DOX_CONF_FILE input source directories 
 {
     cat $DOX_CONF_FILE
-    echo "INPUT" = $(pwd)/include $(pwd)/lib/libdyn/include $(pwd)/lib/libsta/include $(pwd)/lib/cannyEdgeFilter/include $(pwd)/lib/rocksDbWrapper/include
+    echo "INPUT" = $PROJECT_PATH/include $PROJECT_PATH/lib/libdyn/include $PROJECT_PATH/lib/libsta/include $PROJECT_PATH/lib/cannyEdgeFilter/include $PROJECT_PATH/lib/rocksDbWrapper/include
 } > $DOX_CONF_FILE
 
 # Generate documentation
 # dot -c clears Graphviz configuration, doxygen uses Graphviz for generating graphical representations
 sudo dot -c
 
-ERROR_FILE_FLAG=$(pwd)/dox_errors.txt
+ERROR_FILE_FLAG=$PROJECT_PATH/dox_errors.txt
 
 # create documentation: -s specifies comments of configurations items will be omitted.
 # pipe stderr to error file
@@ -79,6 +79,7 @@ DOXYGEN_COMMAND=$(doxygen -s $DOX_CONF_FILE 2> $ERROR_FILE_FLAG)
 # if error file not empty fail
 if [ -s $ERROR_FILE_FLAG ]; then
 echo "Error: There are some files that are not documented correctly"
+cat $ERROR_FILE_FLAG
 exit 1
 else
 echo "All files are documented correctly. Niiiceee"

@@ -32,5 +32,5 @@ int create_message_queue()
     }
     printf("Message queue created QID = %d\n", msg_id);
 
-    return 0;
+    return msg_id;
 }

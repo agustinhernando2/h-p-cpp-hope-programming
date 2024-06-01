@@ -52,8 +52,6 @@ runs:
           # # Disable branch coverage
           arguments+="-rc lcov_branch_coverage=0 "
 
-
-
           echo "Executing: lcov $arguments"
           lcov $arguments
 

@@ -3,7 +3,7 @@
 
 void run_alert_module()
 {
-    create_message_queue();
+
     while (1)
     {
         sleep(5);

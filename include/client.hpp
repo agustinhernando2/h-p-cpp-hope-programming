@@ -58,9 +58,7 @@ const char* localhost_ipv4 = "127.0.0.1";
 const char* localhost_ipv6 = "::1";
 // Localhost ports
 const char* tcp4_port = "8080";
-const char* udp4_port = "8090";
 const char* tcp6_port = "8081";
-const char* udp6_port = "8091";
 
 // flag to option 1 in loop
 int flag_opt1 = 0;
@@ -130,26 +128,20 @@ void send_get_image_filtered_command(UserCredentials user, std::string img_name,
                                      std::unique_ptr<IConnection>& con);
 
 /**
- * @brief Get the image to get from the response
- * @param response
- */
-void get_image_to_get(std::string& response);
-
-/**
  * @brief Send the get supplies command
- * @param user
- * @param serverSocket
- * @param con
+ * @param user to append credentials
+ * @param serverSocket to send the command
+ * @param con to send the command
  */
 void send_get_supplies_command(UserCredentials user, int serverSocket, std::unique_ptr<IConnection>& con);
 
 /**
  * @brief Send the image filtering command
- * @param user
- * @param img_name
- * @param nproc
- * @param serverSocket
- * @param con
+ * @param user to append credentials
+ * @param img_name to append the image name
+ * @param nproc to append the number of processes that will be used
+ * @param serverSocket to send the command
+ * @param con to send the command
  */
 void send_image_filtering_command(UserCredentials user, std::string img_name, int nproc, int serverSocket,
                                   std::unique_ptr<IConnection>& con);
@@ -161,9 +153,3 @@ void send_image_filtering_command(UserCredentials user, std::string img_name, in
  */
 void send_set_supplies_command(UserCredentials user, std::string sup_type, std::string sup_name, std::string sup_amount,
                                int serverSocket, std::unique_ptr<IConnection>& con);
-
-/**
- * @brief Get the image name from the response
- * @param response
- **/
-std::string get_image_name(std::string response);
