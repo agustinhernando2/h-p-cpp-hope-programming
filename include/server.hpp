@@ -1,4 +1,5 @@
 #pragma once
+#include <csignal>
 #include <cstdint>
 #include <cstring>
 #include <fstream>
@@ -22,6 +23,8 @@
 
 // Global semaphore
 std::counting_semaphore<3> semaphore(1);
+std::unique_ptr<IConnection> server;
+int clientFd = 0;
 
 // Localhost IP
 const char* localhost_ipv4 = "127.0.0.1";
@@ -69,7 +72,7 @@ void alert_listener();
  * @brief Emergency listener, when some emergency is received, it will be printed and
  * saved in the emergency log file
  */
-void run_emergency_listener(int fd);
+void run_emergency_listener();
 
 /**
  * @brief Run the server and wait for clients
@@ -79,7 +82,7 @@ int run_server(std::string address, std::string port, int protocol);
 /**
  * @brief Handle the client connections
  */
-void handle_client(IConnection* server, int clientFd);
+void handle_client();
 
 /**
  * @brief Initialize the server http to receive GET and POST requests
@@ -89,7 +92,7 @@ void start_http_server();
 /**
  * @brief End the connection with the client
  */
-void end_conn(int fd);
+void end_conn();
 
 /**
  * @brief Get the command from the message
@@ -111,22 +114,21 @@ void signal_handler(int signal);
 /**
  * @brief Get the image from the client
  * @param message: the message received from the client
- * @param clientFd: the client file descriptor
  * @return the image id
  */
-int get_image(std::string message, int clientFd);
+int get_image(std::string message);
 
 /**
  * @brief Send the image to the client
  */
-void send_image_file(IConnection* con, std::string img_name, int fd);
+void send_image_file(std::string img_name);
 
 /**
  * @brief Get the image selected
  */
-std::string get_image_selected(IConnection* con, int fd);
+std::string get_image_selected();
 
 /**
  * @brief Send the image names to the client
  */
-void send_images_names(IConnection* con, int clientFd);
+void send_images_names();

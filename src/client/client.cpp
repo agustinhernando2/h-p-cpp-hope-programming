@@ -186,7 +186,6 @@ int main(int argc, char const* argv[])
 
 std::string get_img_name(std::string response)
 {
-    clear_screen();
     nlohmann::json j = nlohmann::json::parse(response);
     // get array of images names
     std::vector<std::string> img_names = j["images"].get<std::vector<std::string>>();
@@ -194,6 +193,7 @@ std::string get_img_name(std::string response)
     int option = 0;
     while (true)
     {
+        clear_screen();
         for (int i = 0; i < (int)img_names.size(); i++)
         {
             std::cout << i + 1 << ". " << img_names[i] << std::endl;

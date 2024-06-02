@@ -6,10 +6,11 @@ using namespace std::chrono_literals;
 int main()
 {
     // start_db();
+    std::signal(SIGINT, signal_handler);  // SIGINT (Ctrl+C)
+    std::signal(SIGTSTP, signal_handler); // SIGTSTP (Ctrl+Z)
+    std::signal(SIGTERM, signal_handler); // SIGTERM
     // Create the message queue
     msg_id = create_message_queue();
-
-    std::signal(SIGTERM, signal_handler); // SIGTERM
 
     std::vector<std::jthread> serverThreads;
     // Start servers for IPv4
@@ -44,13 +45,14 @@ int main()
 
 int run_server(std::string address, std::string port, int protocol)
 {
-    std::unique_ptr<IConnection> server = createConnection(address, port, true, protocol);
+    // std::unique_ptr<IConnection> server = createConnection(address, port, true, protocol);
+    server = createConnection(address, port, true, protocol);
     if (server->bind())
     {
         while (true)
         {
             // Accept connection
-            int clientFd = server->connect();
+            clientFd = server->connect();
 
             if (clientFd < 0)
             {
@@ -60,7 +62,7 @@ int run_server(std::string address, std::string port, int protocol)
             std::cout << "Connection accepted. Waiting for messages from the client..." << std::endl;
 
             // Manage the client in a new thread
-            std::jthread clientThread(handle_client, server.get(), clientFd);
+            std::jthread clientThread(handle_client);
             clientThread.detach(); // free the thread resources
         }
     }
@@ -72,13 +74,11 @@ int run_server(std::string address, std::string port, int protocol)
     return 0;
 }
 
-void handle_client(IConnection* server, int clientFd)
+void handle_client()
 {
 
-    std::signal(SIGINT, signal_handler); // SIGINT
-
     // Manage the client in a new thread
-    std::jthread emergency_listener(run_emergency_listener, clientFd);
+    std::jthread emergency_listener(run_emergency_listener);
     emergency_listener.detach(); // free the thread resources
 
     // Internal client to access the HTTP server
@@ -90,10 +90,6 @@ void handle_client(IConnection* server, int clientFd)
     {
         while (true)
         {
-            if (signal_end_conn)
-            {
-                end_conn(clientFd);
-            }
             // Receive message from client
             message = server->receiveFrom(clientFd);
             std::cout << "PID: " << getpid() << std::endl;
@@ -161,26 +157,26 @@ void handle_client(IConnection* server, int clientFd)
                 catch (const std::exception& e)
                 {
                     std::cerr << e.what() << '\n';
-                    end_conn(clientFd);
+                    end_conn();
                 }
                 break;
             }
             case 4: {
                 try
                 {
-                    send_images_names(server, clientFd);
-                    std::string img_name = get_image_selected(server, clientFd);
-                    send_image_file(server, img_name, clientFd);
+                    send_images_names();
+                    std::string img_name = get_image_selected();
+                    send_image_file(img_name);
                     break;
                 }
                 catch (const std::exception& e)
                 {
                     std::cerr << e.what() << '\n';
-                    end_conn(clientFd);
+                    end_conn();
                 }
             }
             case 5:
-                end_conn(clientFd);
+                end_conn();
                 break;
             default:
                 fprintf(stdout, "Command error\n");
@@ -196,24 +192,24 @@ void handle_client(IConnection* server, int clientFd)
     close(clientFd);
 }
 
-void send_images_names(IConnection* con, int clientFd)
+void send_images_names()
 {
     nlohmann::json j;
     // Add image as a key and img_names as an array value
     j["images"] = img_names;
     std::string message = j.dump();
-    con->sendto(message, clientFd);
+    server->sendto(message, clientFd);
 }
 
-std::string get_image_selected(IConnection* con, int fd)
+std::string get_image_selected()
 {
-    std::string message = con->receiveFrom(fd);
+    std::string message = server->receiveFrom(clientFd);
     nlohmann::json j = nlohmann::json::parse(message);
     std::string img_name = j["img_name"].get<std::string>();
     return img_name;
 }
 
-void send_image_file(IConnection* con, std::string img_name, int fd)
+void send_image_file(std::string img_name)
 {
     nlohmann::json j;
     j["img_name"] = img_name;
@@ -244,9 +240,9 @@ void send_image_file(IConnection* con, std::string img_name, int fd)
         // Convert the JSON object to a string
         std::string jsonString = j.dump();
         std::cout << "Sending: " << jsonString << std::endl;
-        con->sendto(jsonString, fd);
+        server->sendto(jsonString, clientFd);
         // Send the compressed file
-        send_vector(fd, file_data, compressedSize);
+        send_vector(clientFd, file_data, compressedSize);
     }
     catch (const std::exception& e)
     {
@@ -255,7 +251,7 @@ void send_image_file(IConnection* con, std::string img_name, int fd)
         j["command"] = "error";
         j["message"] = "Please try again, maybe the file does not exist or the name is incorrect";
         std::string message = j.dump();
-        con->sendto(message, fd);
+        server->sendto(message, clientFd);
         std::cout << j["message"].get<std::string>() << std::endl;
         std::this_thread::sleep_for(1s);
         return;
@@ -326,7 +322,7 @@ void alert_listener()
     }
 }
 
-void run_emergency_listener(int clientFd)
+void run_emergency_listener()
 {
     mess_t send_buffer;
     while (true)
@@ -387,7 +383,7 @@ void run_emergency_listener(int clientFd)
         semaphore.release();
         std::string message = "Emergency received";
         generate_log(message);
-        end_conn(clientFd);
+        end_conn();
     }
 }
 
@@ -474,24 +470,35 @@ int get_command(std::string message)
     }
 }
 
-void end_conn(int fd)
+void end_conn()
 {
     std::string message = "Ending connection...";
-    generate_log(message);
     std::cout << message << std::endl;
-    std::cout << "Sending end connection message..." << std::endl;
-    nlohmann::json j;
-    j["message"] = "Connection ended";
-    j["command"] = "end";
-    message = j.dump();
-    // Send end connection message
-    send(fd, message.c_str(), message.size(), 0);
+    try
+    {
+        generate_log(message);
 
-    std::this_thread::sleep_for(2s);
-    // Close message queue
-    msgctl(msg_id, IPC_RMID, NULL);
-    // Close connection
-    close(fd);
+        // Send end connection message
+        if (clientFd > 0)
+        {
+            std::cout << "Sending end connection message..." << std::endl;
+
+            nlohmann::json j;
+            j["message"] = "Connection ended";
+            j["command"] = "end";
+            message = j.dump();
+            server->sendto(message, clientFd);
+        }
+
+        std::this_thread::sleep_for(2s);
+        // Close message queue
+        msgctl(msg_id, IPC_RMID, NULL);
+        // Close connection using smart pointers
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
     exit(EXIT_SUCCESS);
 }
 void start_http_server()
@@ -609,11 +616,8 @@ void signal_handler(int signal)
     std::cout << "Signal " << signal << " received" << std::endl;
     switch (signal)
     {
-    case SIGTSTP:
-        exit(EXIT_SUCCESS);
-        break;
     case SIGINT:
-        signal_end_conn = 1;
+        end_conn();
         break;
     default:
         break;

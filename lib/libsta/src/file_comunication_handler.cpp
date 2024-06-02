@@ -29,10 +29,6 @@ std::vector<char> receive_vector(int sockfd, std::string output_filename, unsign
     std::cout << "Received compressed data successfully!" << std::endl;
     write_file(output_filename, file_data, compressedSize);
 
-    std::string message = "Received compressed data successfully! Process id: " + std::to_string(getpid()) + " " +
-                          std::to_string(dataSize) + " bytes" + " Original size: " + std::to_string(compressedSize) +
-                          " bytes" + " Compression ratio: " + std::to_string((double)compressedSize / dataSize);
-    generate_log(message);
     return file_data;
 }
 
@@ -50,12 +46,6 @@ void decompressFile(std::vector<char> file_data, std::string output_filename)
     printf("Decompressed size: %lu bytes\n", decompressedSize);
     // Write decompressed data to file
     write_file(output_filename, decompressedData, decompressedSize);
-
-    std::string message = "Decompressed data successfully! Decompressed size: Process id" + std::to_string(getpid()) +
-                          " " + std::to_string(decompressedSize) + " bytes" +
-                          " Original size: " + std::to_string(file_data.size()) + " bytes" +
-                          " Compression ratio: " + std::to_string((double)file_data.size() / (double)decompressedSize);
-    generate_log(message);
 }
 
 std::vector<char> compressFile(const std::string& input_filename, const std::string& compressed_filename,
