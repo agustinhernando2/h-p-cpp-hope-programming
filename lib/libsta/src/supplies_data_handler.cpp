@@ -51,3 +51,20 @@ std::string get_supplies_from_database(std::string database)
     supplies = j[SUPPLIES_KEY].dump(4);
     return supplies;
 }
+
+void delete_supplies()
+{
+    return delete_supplies_from_database(database);
+}
+
+void delete_supplies_from_database(std::string database)
+{
+    // Open the database or create it if it does not exist
+    std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>(database);
+    // Create an empty json object
+    std::string supplies = "{}";
+    // Parse the json object
+    nlohmann::json empty = nlohmann::json::parse(supplies);
+    // Update the database
+    db->put(SUPPLIES_KEY, empty.dump());
+}

@@ -14,7 +14,7 @@
 #define BUFFER_SIZE_M 512
 
 // message queue
-#define K_MSG "build/src/server"
+#define K_MSG "build/"
 
 #ifdef __cplusplus
 extern "C"

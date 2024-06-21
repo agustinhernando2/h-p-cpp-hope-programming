@@ -5,7 +5,6 @@ using namespace std::chrono_literals;
 
 int main()
 {
-    // start_db();
     std::signal(SIGINT, signal_handler);  // SIGINT (Ctrl+C)
     std::signal(SIGTSTP, signal_handler); // SIGTSTP (Ctrl+Z)
     std::signal(SIGTERM, signal_handler); // SIGTERM
@@ -387,58 +386,6 @@ void run_emergency_listener()
     }
 }
 
-// Datos JSON
-const std::string json_data = R"(
-{
-    "alerts": {
-        "NORTH": 74,
-        "EAST": 70,
-        "WEST": 70,
-        "SOUTH": 65
-    },
-    "supplies": {
-        "food": {
-            "vegetables": 200,
-            "fruits": 200,
-            "grains": 200,
-            "meat": 200
-        },
-        "medicine": {
-            "antibiotics": 1,
-            "analgesics": 100,
-            "antipyretics": 100,
-            "antihistamines": 100
-        }
-    },
-    "emergency": {
-        "last_keepalived": "Sun May 12 22:18:48",
-        "last_event": "Sun May 12 22:18:48, Server failure. Emergency notification sent to all connected clients."
-    }
-}
-)";
-
-void start_db()
-{
-    std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>(database);
-
-    try
-    {
-        // JSON parser
-        nlohmann::json data = nlohmann::json::parse(json_data);
-
-        // Insert
-        db->put(K_ALERTS, data[K_ALERTS].dump());
-        db->put(SUPPLIES_KEY, data[SUPPLIES_KEY].dump());
-        db->put("emergency", data["emergency"].dump());
-
-        std::cout << "Database inicialized." << std::endl;
-    }
-    catch (const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-}
-
 int get_command(std::string message)
 {
 
@@ -528,6 +475,24 @@ void start_http_server()
         }
     });
 
+    srv.Get("/deletesupplies", [](const httplib::Request&, httplib::Response& res) {
+        std::string message = "Deleting supplies...";
+        generate_log(message);
+        std::cout << message << std::endl;
+
+        delete_supplies();
+        res.set_content("Supply Deletion Successful", "application/json");
+    });
+
+    srv.Get("/initdb", [](const httplib::Request&, httplib::Response& res) {
+        std::string message = "Initializing db...";
+        generate_log(message);
+        std::cout << message << std::endl;
+
+        start_db();
+        res.set_content("Successful initialization", "application/json");
+    });
+
     srv.Get("/database", [](const httplib::Request&, httplib::Response& res) {
         std::string message = "Getting database...";
         std::cout << message << std::endl;
@@ -609,6 +574,58 @@ void start_http_server()
 
     // listen all interfaces
     srv.listen(localhost_ipv4, http_port);
+}
+
+// Datos JSON
+const std::string json_data = R"(
+{
+    "alerts": {
+        "NORTH": 74,
+        "EAST": 70,
+        "WEST": 70,
+        "SOUTH": 65
+    },
+    "supplies": {
+        "food": {
+            "vegetables": 200,
+            "fruits": 200,
+            "grains": 200,
+            "meat": 200
+        },
+        "medicine": {
+            "antibiotics": 1,
+            "analgesics": 100,
+            "antipyretics": 100,
+            "antihistamines": 100
+        }
+    },
+    "emergency": {
+        "last_keepalived": "Sun May 12 22:18:48",
+        "last_event": "Sun May 12 22:18:48, Server failure. Emergency notification sent to all connected clients."
+    }
+}
+)";
+
+void start_db()
+{
+    std::unique_ptr<RocksDbWrapper> db = std::make_unique<RocksDbWrapper>(database);
+
+    try
+    {
+        // JSON parser
+        nlohmann::json data = nlohmann::json::parse(json_data);
+
+        // Insert
+        db->put(K_ALERTS, data[K_ALERTS].dump());
+        db->put(SUPPLIES_KEY, data[SUPPLIES_KEY].dump());
+        db->put("emergency", data["emergency"].dump());
+
+        std::cout << "Database inicialized." << std::endl;
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
 }
 
 void signal_handler(int signal)

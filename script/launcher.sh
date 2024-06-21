@@ -14,9 +14,9 @@ elif [ "$1" = "valgrind" ]; then
     gnome-terminal --title="client6 - valgrind" -- bash -c "valgrind -s --leak-check=full --show-leak-kinds=all --track-origins=yes ./build/src/client/client localhost 0; exec bash" &
 else
     # Normal ex
-    gnome-terminal --title="server" -- sudo ./build/src/server/server
+    gnome-terminal --title="server" -- bash -c "./build/src/server/server; exec bash" &
     sleep 1
-    gnome-terminal --title="client4" -- ./build/src/client/client localhost 1
+    gnome-terminal --title="client4" -- bash -c "./build/src/client/client localhost 1; exec bash" &
     sleep 1
-    gnome-terminal --title="client6" -- ./build/src/client/client localhost 0
+    gnome-terminal --title="client6" -- bash -c "./build/src/client/client localhost 0; exec bash" &
 fi

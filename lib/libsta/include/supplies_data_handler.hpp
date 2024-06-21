@@ -37,3 +37,13 @@ std::string get_supplies();
  * @return: a string with all the supplies in json format
  */
 std::string get_supplies_from_database(std::string database);
+
+/*
+ * This function deletes all the supplies from the database
+ */
+void delete_supplies();
+
+/*
+ * This function deletes all the supplies from the database
+ */
+void delete_supplies_from_database(std::string database);
