@@ -544,7 +544,7 @@ createConnection(const std::string& address, const std::string& port, bool isBlo
 
     switch (protocol)
     {
-        case Protocol::TCPv4: return std::make_unique<TCPv4Connection>(address, port, isBlocking); break;
+        case Protocol::TCPv4: return std::make_unique<TCPv4Connection>("", port, isBlocking); break;
         case Protocol::TCPv6: return std::make_unique<TCPv6Connection>(address, port, isBlocking); break;
         case Protocol::UDPv4: return std::make_unique<UDPConnection>(address, port, isBlocking, false); break;
         case Protocol::UDPv6: return std::make_unique<UDPConnection>(address, port, isBlocking, true); break;

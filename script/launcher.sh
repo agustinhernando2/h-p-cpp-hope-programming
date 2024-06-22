@@ -16,7 +16,7 @@ else
     # Normal ex
     gnome-terminal --title="server" -- bash -c "./build/src/server/server; exec bash" &
     sleep 1
-    gnome-terminal --title="client4" -- bash -c "./build/src/client/client localhost 1; exec bash" &
+    gnome-terminal --title="client4" -- bash -c "./build/src/client/client "127.0.0.1" 1; exec bash" &
     sleep 1
-    gnome-terminal --title="client6" -- bash -c "./build/src/client/client localhost 0; exec bash" &
+    gnome-terminal --title="client6" -- bash -c "./build/src/client/client "::1" 0; exec bash" &
 fi

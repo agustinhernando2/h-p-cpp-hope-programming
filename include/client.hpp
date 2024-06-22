@@ -54,8 +54,8 @@ const int NORMAL_LEVEL = 0;
 const std::string img_path = "img_cli/";
 
 // Localhost IP
-const char* localhost_ipv4 = "127.0.0.1";
-const char* localhost_ipv6 = "::1";
+// const char* localhost_ipv4 = "127.0.0.1";
+// const char* localhost_ipv6 = "::1";
 // Localhost ports
 const char* tcp4_port = "8080";
 const char* tcp6_port = "8081";

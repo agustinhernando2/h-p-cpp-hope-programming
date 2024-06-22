@@ -17,6 +17,11 @@ void send_alert_msqueue(mess_t* send_buffer)
 
 int create_message_queue()
 {
+    // add random number to the key
+    int random = time(NULL);
+    char key_path[100];
+    sprintf(key_path, "%s%d", K_MSG, random);
+
     // Create a unique key
     key_t key = ftok(K_MSG, 'm');
     if (key == -1)
@@ -30,7 +35,7 @@ int create_message_queue()
         error_handler(". error", __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
-    printf("Message queue created QID = %d\n", msg_id);
+    printf("Message queue created QID = %d, using key = %s\n", msg_id, key_path);
 
     return msg_id;
 }

@@ -17,7 +17,7 @@ int main(int argc, char const* argv[])
     if (argc < 3)
     {
         std::cerr << "Uso: " << argv[0] << " <host> IPv4\n";
-        std::cerr << "Example: " << argv[0] << " localhost 1\n";
+        std::cerr << "Example: " << argv[0] << "\"127.0.0.1\" 1\n";
         std::exit(EXIT_SUCCESS);
     }
 
@@ -30,7 +30,8 @@ int main(int argc, char const* argv[])
 
     // get ip version4 true / false
     is_ip_version_4 = std::atoi(argv[2]);
-    std::string address = (is_ip_version_4) ? localhost_ipv4 : localhost_ipv6;
+    // get address
+    std::string address = argv[1];
     std::string port = (is_ip_version_4) ? tcp4_port : tcp6_port;
 
     std::cout << "Connecting to " << address << ":" << port << std::endl;
