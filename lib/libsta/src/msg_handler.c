@@ -20,7 +20,7 @@ int create_message_queue()
     // add random number to the key
     int random = time(NULL);
     char key_path[100];
-    sprintf(key_path, "%s%d", K_MSG, random);
+    sprintf(key_path, "%s_%d", K_MSG, random);
 
     // Create a unique key
     key_t key = ftok(K_MSG, 'm');

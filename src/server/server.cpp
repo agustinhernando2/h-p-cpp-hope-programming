@@ -438,14 +438,14 @@ void end_conn()
         }
 
         std::this_thread::sleep_for(2s);
-        // Close message queue
-        msgctl(msg_id, IPC_RMID, NULL);
         // Close connection using smart pointers
     }
     catch (const std::exception& e)
     {
         std::cerr << e.what() << '\n';
     }
+    // Close message queue
+    msgctl(msg_id, IPC_RMID, NULL);
     exit(EXIT_SUCCESS);
 }
 void start_http_server()
@@ -634,6 +634,9 @@ void signal_handler(int signal)
     switch (signal)
     {
     case SIGINT:
+        end_conn();
+        break;
+    case SIGTERM:
         end_conn();
         break;
     default:
