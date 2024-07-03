@@ -65,3 +65,4 @@
 /img_cli/*.gz
 /img_svr/*.gz
 msgq.txt
+latex

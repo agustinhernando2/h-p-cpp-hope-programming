@@ -45,7 +45,7 @@ mkdir -p build && cd build
 
 # Configura el proyecto usando CMake con el generador Ninja
 if [ "$1" == "test" ]; then
-    cmake -GNinja -DRUNS_COVERAGE=1 -DRUNS_TESTS=1 ..
+    cmake -GNinja -DRUNS_COVERAGE=1 -DRUNS_TESTS=1 -DCMAKE_BUILD_TYPE=Release ..
     ninja -j$(nproc)
     ctest --output-on-failure -VV
     gcovr -r .. --html --html-details -o reports/coverage.html
