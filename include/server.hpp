@@ -23,8 +23,6 @@
 
 // Global semaphore
 std::counting_semaphore<3> semaphore(1);
-std::unique_ptr<IConnection> server;
-int clientFd = 0;
 
 // Localhost IP
 const char* localhost_ipv4 = "127.0.0.1";
@@ -82,7 +80,7 @@ int run_server(std::string address, std::string port, int protocol);
 /**
  * @brief Handle the client connections
  */
-void handle_client();
+void handle_client(IConnection* server, int clientFd);
 
 /**
  * @brief Initialize the server http to receive GET and POST requests
@@ -116,19 +114,19 @@ void signal_handler(int signal);
  * @param message: the message received from the client
  * @return the image id
  */
-int get_image(std::string message);
+int get_image(std::string message, IConnection* server, int clientFd);
 
 /**
  * @brief Send the image to the client
  */
-void send_image_file(std::string img_name);
+void send_image_file(std::string img_name, IConnection* server, int clientFd);
 
 /**
  * @brief Get the image selected
  */
-std::string get_image_selected();
+std::string get_image_selected(IConnection* server, int clientFd);
 
 /**
  * @brief Send the image names to the client
  */
-void send_images_names();
+void send_images_names(IConnection* server, int clientFd);

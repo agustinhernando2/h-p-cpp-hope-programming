@@ -60,7 +60,10 @@ TCPv4Connection::TCPv4Connection(const std::string& address, const std::string& 
     }
 
     addrinfo* raw_addrinfo = nullptr;
-    int resultAddrInfo = getaddrinfo(address.empty() ? nullptr : address.c_str(), port.c_str(), &hints, &raw_addrinfo);
+    // int resultAddrInfo = getaddrinfo(address.empty() ? nullptr : address.c_str(), port.c_str(), &hints, &raw_addrinfo);
+    // std::string hostname = "cppserver.app";
+    std::string hostname = address.empty() ? nullptr : address.c_str();
+    int resultAddrInfo = getaddrinfo(hostname.c_str(), port.c_str(), &hints, &raw_addrinfo);
 
     if (resultAddrInfo != 0)
     {
@@ -81,6 +84,7 @@ bool TCPv4Connection::bind()
     {
         if (::bind(m_socket, m_addrinfo->ai_addr, m_addrinfo->ai_addrlen) < 0)
         {
+            std::cout << "B" << std::endl;
             throw std::runtime_error("Error: cannot bind socket");
         }
     }
@@ -120,13 +124,24 @@ int TCPv4Connection::connect()
 
         return clientFd;
     }
-
     // connect client
     if (::connect(m_socket, m_addrinfo->ai_addr, m_addrinfo->ai_addrlen) == -1)
     {
+        // print connect variables for debugging
+        printf("Socket: %d\n", m_socket);
+        // print address info to debug
+        printf("ai_family: %d\n", m_addrinfo->ai_family);
+        printf("ai_socktype: %d\n", m_addrinfo->ai_socktype);
+        printf("ai_protocol: %d\n", m_addrinfo->ai_protocol);
+        // print parts of ai_addr info to debug
+        char ipstr[INET_ADDRSTRLEN];
+        inet_ntop(m_addrinfo->ai_family, &(((struct sockaddr_in*)m_addrinfo->ai_addr)->sin_addr), ipstr, sizeof(ipstr));
+        printf("ai_addr: %s\n", ipstr);
+        printf("ai_addrlen: %d\n", m_addrinfo->ai_addrlen);
+        printf("Port: %d\n", ntohs(((struct sockaddr_in*)m_addrinfo->ai_addr)->sin_port));
+        printf("Error: %s\n", strerror(errno));
         throw std::runtime_error("Error: cannot connect");
     }
-
     return true;
 }
 
@@ -544,7 +559,7 @@ createConnection(const std::string& address, const std::string& port, bool isBlo
 
     switch (protocol)
     {
-        case Protocol::TCPv4: return std::make_unique<TCPv4Connection>("", port, isBlocking); break;
+        case Protocol::TCPv4: return std::make_unique<TCPv4Connection>(address, port, isBlocking); break;
         case Protocol::TCPv6: return std::make_unique<TCPv6Connection>(address, port, isBlocking); break;
         case Protocol::UDPv4: return std::make_unique<UDPConnection>(address, port, isBlocking, false); break;
         case Protocol::UDPv6: return std::make_unique<UDPConnection>(address, port, isBlocking, true); break;

@@ -12,17 +12,15 @@ int main()
     msg_id = create_message_queue();
 
     std::vector<std::jthread> serverThreads;
+
     // Start servers for IPv4
-    std::cout << "Server IPv4 TCP listening: " << localhost_ipv4 << ":" << tcp4_port << std::endl;
     serverThreads.emplace_back([] { run_server(localhost_ipv4, tcp4_port, TCP); });
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 
     // Start servers for IPv6
-    std::cout << "Server IPv6 TCP listening: " << localhost_ipv6 << ":" << tcp6_port << std::endl;
     serverThreads.emplace_back([] { run_server(localhost_ipv6, tcp6_port, TCP); });
-
     // Start HTTP server
     serverThreads.emplace_back([] { start_http_server(); });
-
     // Start Emergency Module
     serverThreads.emplace_back([] { run_emergency_module(); });
     // Start Alert Module
@@ -44,12 +42,17 @@ int main()
 
 int run_server(std::string address, std::string port, int protocol)
 {
-    // std::unique_ptr<IConnection> server = createConnection(address, port, true, protocol);
+    std::unique_ptr<IConnection> server;
     server = createConnection(address, port, true, protocol);
+
+    std::printf("Server listening on %s:%s\n", address.c_str(), port.c_str());
+    std::cout << "PID: " << getpid() << std::endl;
+    int clientFd = -1;
     if (server->bind())
     {
         while (true)
         {
+            std::cout << "Waiting for connection..." << std::endl;
             // Accept connection
             clientFd = server->connect();
 
@@ -58,24 +61,24 @@ int run_server(std::string address, std::string port, int protocol)
                 std::cerr << "Accept error." << std::endl;
                 continue;
             }
-            std::cout << "Connection accepted. Waiting for messages from the client..." << std::endl;
-
             // Manage the client in a new thread
-            std::jthread clientThread(handle_client);
+            std::jthread clientThread(handle_client, server.get(), clientFd);
             clientThread.detach(); // free the thread resources
         }
     }
     else
     {
+        std::cerr << "Bind error." << std::endl;
         return 1;
     }
 
     return 0;
 }
 
-void handle_client()
+void handle_client(IConnection* server, int clientFd)
 {
-
+    std::cout << "Connection accepted. Waiting for messages from the client..." << std::endl;
+    std::cout << "Conn PID: " << getpid() << ", Client FD: " << clientFd << std::endl;
     // Manage the client in a new thread
     std::jthread emergency_listener(run_emergency_listener);
     emergency_listener.detach(); // free the thread resources
@@ -163,9 +166,9 @@ void handle_client()
             case 4: {
                 try
                 {
-                    send_images_names();
-                    std::string img_name = get_image_selected();
-                    send_image_file(img_name);
+                    send_images_names(server, clientFd);
+                    std::string img_name = get_image_selected(server, clientFd);
+                    send_image_file(img_name, server, clientFd);
                     break;
                 }
                 catch (const std::exception& e)
@@ -191,7 +194,7 @@ void handle_client()
     close(clientFd);
 }
 
-void send_images_names()
+void send_images_names(IConnection* server, int clientFd)
 {
     nlohmann::json j;
     // Add image as a key and img_names as an array value
@@ -200,7 +203,7 @@ void send_images_names()
     server->sendto(message, clientFd);
 }
 
-std::string get_image_selected()
+std::string get_image_selected(IConnection* server, int clientFd)
 {
     std::string message = server->receiveFrom(clientFd);
     nlohmann::json j = nlohmann::json::parse(message);
@@ -208,7 +211,7 @@ std::string get_image_selected()
     return img_name;
 }
 
-void send_image_file(std::string img_name)
+void send_image_file(std::string img_name, IConnection* server, int clientFd)
 {
     nlohmann::json j;
     j["img_name"] = img_name;
@@ -426,16 +429,16 @@ void end_conn()
         generate_log(message);
 
         // Send end connection message
-        if (clientFd > 0)
-        {
-            std::cout << "Sending end connection message..." << std::endl;
+        // if (clientFd > 0)
+        // {
+        //     std::cout << "Sending end connection message..." << std::endl;
 
-            nlohmann::json j;
-            j["message"] = "Connection ended";
-            j["command"] = "end";
-            message = j.dump();
-            server->sendto(message, clientFd);
-        }
+        //     nlohmann::json j;
+        //     j["message"] = "Connection ended";
+        //     j["command"] = "end";
+        //     message = j.dump();
+        //     server->sendto(message, clientFd);
+        // }
 
         std::this_thread::sleep_for(2s);
         // Close connection using smart pointers

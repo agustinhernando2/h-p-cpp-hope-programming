@@ -86,3 +86,5 @@ echo "All files are documented correctly. Niiiceee"
 exit 0
 fi
 
+sudo chown agustin:agustin include/server.hpp
+sudo chown agustin:agustin src/server/server.cpp
