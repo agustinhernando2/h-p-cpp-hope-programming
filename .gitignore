@@ -64,5 +64,6 @@
 /img_svr/*.png
 /img_cli/*.gz
 /img_svr/*.gz
+/img/*.tif
 msgq.txt
 latex
