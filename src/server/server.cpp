@@ -65,7 +65,7 @@ int run_server(std::string address, std::string port, int protocol)
             // Manage the client in a new thread
             std::jthread clientThread(handle_client, server.get(), clientFd);
             // free the thread resources
-            clientThread.detach(); 
+            clientThread.detach();
         }
     }
     else
@@ -447,7 +447,7 @@ void end_conn()
     {
         std::cerr << e.what() << '\n';
     }
-    
+
     // Close message queue
     msgctl(msg_id, IPC_RMID, NULL);
     exit(EXIT_SUCCESS);
