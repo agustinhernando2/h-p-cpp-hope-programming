@@ -85,8 +85,19 @@ cat $ERROR_FILE_FLAG
 exit 1
 else
 echo "All files are documented correctly. Niiiceee"
-exit 0
 fi
 
 sudo chown agustin:agustin include/server.hpp
 sudo chown agustin:agustin src/server/server.cpp
+
+# Encuentra todos los archivos de texto (puedes ajustar la extensión según sea necesario)
+find $PROJECT_PATH -type f -name "*.txt" -o -name "*.md" -o -name "*.c" -o -name "*.h" -o -name "*.sh" | while read file; do
+  # Comprueba si el archivo no termina con una nueva línea
+  if [ "$(tail -c1 "$file" | wc -l)" -ne 1 ]; then
+    # Añade una nueva línea al final del archivo
+    echo >> "$file"
+    echo "Added newline to the end of: $file"
+  fi
+done
+
+exit 0
