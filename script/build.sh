@@ -3,6 +3,7 @@
 DOX_CONF_FILE=$(pwd)/Doxyfile
 # Obtenemos la ruta absoluta del directorio del proyecto
 PROJECT_PATH=$(pwd)
+ERROR_FILE_FLAG=$PROJECT_PATH/clang-format_errors.txt
 
 echo $PROJECT_PATH
 
@@ -21,7 +22,7 @@ SOURCE_FILES+=$(find $PROJECT_PATH/lib/rocksDbWrapper/src -type f \( -name "*.cp
 SOURCE_FILES+=$(find $PROJECT_PATH/lib/rocksDbWrapper/include -type f \( -name "*.cpp" -or -name "*.hpp" -or -name "*.h" -or -name "*.c" \) | tr "\n" " ")
 
 clang-format -i $SOURCE_FILES
-clang-format -n $SOURCE_FILES
+clang-format -n $SOURCE_FILES 2> ${ERROR_FILE_FLAG}
 
 # Ruta del directorio build
 BUILD_DIR="build"

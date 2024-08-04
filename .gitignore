@@ -67,3 +67,4 @@
 /img/*.tif
 msgq.txt
 latex
+clang-format_errors.txt
