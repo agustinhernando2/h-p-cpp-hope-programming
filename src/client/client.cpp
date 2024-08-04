@@ -57,7 +57,7 @@ int main(int argc, char const* argv[])
     std::string sup_type;
     std::string sup_name;
     std::string sup_amount;
-    int amount = 0;
+    int amount = 0, flag_amount = 0;
     std::string img_name;
     int nproc = 0;
     try
@@ -96,7 +96,7 @@ int main(int argc, char const* argv[])
                         std::cout << "Enter the supply name: " << std::endl;
                         std::cin >> sup_name;
 
-                        int flag_amount = 0;
+                        flag_amount = 0;
                         do
                         {
                             flag_amount = 0;
@@ -110,7 +110,7 @@ int main(int argc, char const* argv[])
                                 flag_amount = 1;
                             }
                         } while (flag_amount);
-                        
+
                         sup_amount = std::to_string(amount);
                         // send set supplies command
                         send_set_supplies_command(user, sup_type, sup_name, sup_amount, serverSocket, con);

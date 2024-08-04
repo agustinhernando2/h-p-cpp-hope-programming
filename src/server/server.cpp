@@ -46,7 +46,8 @@ int run_server(std::string address, std::string port, int protocol)
     server = createConnection(address, port, true, protocol);
 
     std::printf("Server listening on %s:%s\n", address.c_str(), port.c_str());
-    std::cout << "PID: " << getpid() << std::endl;
+
+    // std::cout << "PID: " << getpid() << std::endl;
     int clientFd = -1;
     if (server->bind())
     {
@@ -63,7 +64,8 @@ int run_server(std::string address, std::string port, int protocol)
             }
             // Manage the client in a new thread
             std::jthread clientThread(handle_client, server.get(), clientFd);
-            clientThread.detach(); // free the thread resources
+            // free the thread resources
+            clientThread.detach(); 
         }
     }
     else
@@ -94,7 +96,7 @@ void handle_client(IConnection* server, int clientFd)
         {
             // Receive message from client
             message = server->receiveFrom(clientFd);
-            std::cout << "PID: " << getpid() << std::endl;
+            // std::cout << "PID: " << getpid() << std::endl;
             std::cout << "Message received: " << message << std::endl;
             std::this_thread::sleep_for(500ms);
 
@@ -273,7 +275,6 @@ void alert_listener()
         {
             // print errno
             perror("msgrcv error");
-            std::cerr << "1msg_id" << msg_id << std::endl;
             std::this_thread::sleep_for(1s);
             continue;
         }
@@ -333,7 +334,6 @@ void run_emergency_listener()
         {
             // print errno
             perror("msgrcv error");
-            std::cerr << "2msg_id" << msg_id << std::endl;
             std::this_thread::sleep_for(1s);
             continue;
         }
@@ -447,6 +447,7 @@ void end_conn()
     {
         std::cerr << e.what() << '\n';
     }
+    
     // Close message queue
     msgctl(msg_id, IPC_RMID, NULL);
     exit(EXIT_SUCCESS);
