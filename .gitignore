@@ -35,7 +35,7 @@
 /build/
 
 # External directoy
-/external/
+/external/cJSON
 
 # Dependency files
 *.d
@@ -46,3 +46,26 @@
 
 # Dont track sonnar files
 .scannerwork/
+
+#submodules
+#/lib/
+# lib/cppSocket
+
+*.tif
+*.db
+*.gdb_history
+/data/state_summary.json
+/img/sobelDirection.png
+/img/sobelMagnitude.png
+/img/maxsupress.png
+/img/gauss.png
+/img/canny.png
+/img_cli/*.png
+/img_svr/*.png
+/img_cli/*.gz
+/img_svr/*.gz
+/img/*.tif
+msgq.txt
+latex
+clang-format_errors.txt
+dox_errors.txt

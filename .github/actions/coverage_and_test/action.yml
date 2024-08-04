@@ -1,56 +1,112 @@
 name: "Test and coverage check"
 description: "Test and coverage check with gcovr, pass if coverage is greater than 20%"
 
+inputs:
+  path:
+    required: true
+    description: "Path to run tests and coverage"
+    default: .
+
 runs:
   using: "composite"
   steps:
-    - name: "Run coverage"
+    - name: Run tests
       shell: bash
       run: |
-        PROJECT_PATH=$(pwd)
+          cd ${{ inputs.path }}/build
 
-        ERROR_FILE_FLAG=$(pwd)/tests_errors.txt
-        
-        CTEST_ERROR_FILE_FLAG=$(pwd)/ctest_errors.txt
-        # run tests built with cmake
-        # --output-on-faileure: prints everythin outputted by the tests if it fails
-        # -VV verbose output
-        CTEST_COMMAND=$(ctest --test-dir build/tests --output-on-failure -VV 2> $CTEST_ERROR_FILE_FLAG 1>$ERROR_FILE_FLAG)
+          ctest --output-on-failure
 
-        if [ -s $CTEST_ERROR_FILE_FLAG ]; then
-          echo "Error: Unit Tests Failed"
+    - name: Run valgrind
+      shell: bash
+      run: |
+          cd ${{ inputs.path }}/build
+
+          # Run tests and check for memory leaks
+          valgrind --leak-check=full ctest --output-on-failure
+
+    - name: Generate coverage files
+      shell: bash
+      run: |
+          cd ${{ inputs.path }}
+          
+          # Set arguments
+          arguments="--capture "
+
+          # Set working directory
+          if [[ -d "build/tests/unit" ]]; then
+            arguments+="--directory build/tests/unit "
+          fi
+
+          if [[ -d "build/tests/component" ]]; then
+            arguments+="--directory build/tests/component "
+          fi
+
+          if [[ -d "build/tests" ]]; then
+            arguments+="--directory build/tests "
+          fi
+
+          # Set output file
+          arguments+="--output-file build/coverage.info "
+
+          # # Disable branch coverage
+          arguments+="-rc lcov_branch_coverage=0 "
+
+          echo "Executing: lcov $arguments"
+          lcov $arguments
+
+    - name: Generate coverage report
+      shell: bash
+      run: |
+
+        cd ${{ inputs.path }}/build
+
+        # Generate HTML report
+        genhtml coverage.info --output-directory coverage_report
+
+    # Upload the coverage report as an artifact
+    - name: Uploading coverage report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: Coverage Report
+        path: ${{ inputs.path }}/build/coverage_report
+        retention-days: 1
+
+    # Check whether the coverage is greater than 20% both for lines and functions
+    - name: Validate coverage
+      shell: bash
+      run: |
+
+        cd ${{ inputs.path }}
+
+        # Obtain the coverage data
+        coverageData=($(lcov --list build/coverage.info | tail -n1 | grep -oE '[0-9.]+%'))
+
+        # Check if lines the coverage is greater than 20%
+        linesCoverage=$(echo "${coverageData[0]}" | sed 's/%//')
+        echo "Lines coverage is: $linesCoverage %"
+        if ! (( $(echo "$linesCoverage > 20" | bc -l) )); then
+          echo "----------------------------------------"
+          echo "FAILED: Lines coverage is lower than 20%"
+          echo "----------------------------------------"
           exit 1
         else
-          echo "All tests where passed!"
+          echo "------------------------------------------"
+          echo "PASSED: Lines coverage is greater than 20%"
+          echo "------------------------------------------"
         fi
-        
-        # run coverage of those tests and oputput to file
-        gcovr -r $PROJECT_PATH . >> $ERROR_FILE_FLAG
 
-        echo "Runnig: gcovr -r $PROJECT_PATH ."
-
-        cat $ERROR_FILE_FLAG
-
-        # Find the value of correct coverage
-        # parse coverage output file and extracts coverage percentage
-        # grep pulls out the line of the total
-        # awk prints only the last field (NF = number of fields of the grepped line)
-        # cut finnaly creates a list using '%' as a delimiter (-d '%') and keeps first value (-f 1)
-        COVERAGE_RESULT=$(grep "TOTAL" $ERROR_FILE_FLAG | awk '{print $NF}' | cut -d '%' -f 1)
-
-        # Coverage lines GT 20
-        if [ "$(echo "$COVERAGE_RESULT > 20" | bc)" -eq 1 ]; then
-            echo "Coverage is greater than 20%. Nice!"
-            exit 0
+        # Check if functions coverage is greater than 20%
+        functionsCoverage=$(echo "${coverageData[1]}" | sed 's/%//')
+        echo "Functions coverage is: $functionsCoverage %"
+        if ! (( $(echo "$functionsCoverage > 20" | bc -l) )); then
+          echo "---------------------------------------------"
+          echo "FAILED: Functions coverage is lower than 20%"
+          echo "--------------------------------------------"
+          exit 1
         else
-            echo "Error: Coverage is less than or equal to 20%"
-            exit 1
+          echo "----------------------------------------------"
+          echo "PASSED: Functions coverage is greater than 20%"
+          echo "----------------------------------------------"
         fi
-
-    # Upload errors as an artifact, when failed
-    - uses: actions/upload-artifact@v3
-      if: failure()
-      with:
-        name: Tests or coverage errors!!!
-        path: ./tests_errors.txt
-        retention-days: 1

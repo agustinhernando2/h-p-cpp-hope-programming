@@ -225,3 +225,67 @@ int main(int argc, char *argv[]) {
 </details>
 
 - **RESTful API with [Ulfius](https://github.com/babelouest/ulfius)**: Clients are implemented using the Ulfius framework to make RESTful requests, enabling efficient communication with the central server.
+
+
+
+# Análisis de Tiempos de Procesamiento
+
+Este gráfico muestra los tiempos de procesamiento en función de la cantidad de hilos utilizados.
+
+![Tiempos de procesamiento por cantidad de hilos](./img/analisis.png)
+
+En general, aumentar la cantidad de hilos reduce los tiempos de procesamiento. Por ejemplo, al pasar de 3 hilos a 20 hilos, el tiempo total de procesamiento disminuye de 50930 ms a 32434.1 ms. El mayor descenso en los tiempos de procesamiento ocurre hasta los 10 hilos. Algunas operaciones se pudieron paralelizar mas que otras como 'sobelOperator'.
+
+## Datos en Tabla
+
+| cantidad de hilos | applyGaussianBlur (ms) | sobelOperator (ms) | nonMaximumSuppression (ms) | applyLinkingAndHysteresis (ms) | Tiempo de total (ms) |
+|-------------------|-------------------------|---------------------|----------------------------|-------------------------------|----------------------|
+| 3                 | 20444.1                 | 25844.4             | 2180.39                    | 2191.72                       | 50930                |
+| 4                 | 16342.1                 | 22315.5             | 2005.87                    | 1916.23                       | 42848.2              |
+| 5                 | 12855.4                 | 19018.9             | 1912.8                     | 1750.56                       | 35808.1              |
+| 6                 | 13007.4                 | 19426.5             | 1860.38                    | 1648.75                       | 36211.5              |
+| 7                 | 13219.7                 | 18483.6             | 1883.53                    | 1762.05                       | 35618.2              |
+| 8                 | 11955.7                 | 17429.6             | 1841.85                    | 1714.62                       | 33204.7              |
+| 9                 | 10972.2                 | 16613.6             | 1785.63                    | 1640.88                       | 31278.5              |
+| 10                | 10885.7                 | 16476.6             | 1781.32                    | 1679.64                       | 31087.9              |
+| 11                | 10085                   | 17638.7             | 1796.51                    | 1560.82                       | 31351.4              |
+| 12                | 9205.72                 | 20168.9             | 1730.96                    | 1558.15                       | 32930.9              |
+| 13                | 9749.58                 | 20282.2             | 1780.92                    | 1642.99                       | 33718.7              |
+| 14                | 10143.9                 | 20212               | 1764.94                    | 1754.28                       | 34142.9              |
+| 15                | 9912.34                 | 20763.1             | 1762.53                    | 1585.43                       | 34292.7              |
+| 16                | 9781.73                 | 19456.2             | 1828.69                    | 1612.2                        | 32945.2              |
+| 17                | 9805.48                 | 20983.9             | 1731.77                    | 1545.2                        | 34336.5              |
+| 18                | 9659.47                 | 19457.3             | 1746.07                    | 1610.77                       | 32742.6              |
+| 19                | 9810.59                 | 20103.1             | 1727.84                    | 1522.96                       | 33426.1              |
+| 20                | 9565.74                 | 19300.3             | 1740.79                    | 1559.64                       | 32434.1              |
+
+
+```c
+#include <omp.h>
+#include <chrono>
+
+int main(int argc, char const *argv[])
+{
+    int numThreads = 1;
+    // get the number of threads from argv
+    if (argc > 1)
+    {
+        numThreads = atoi(argv[1]);
+    }
+    omp_set_num_threads(numThreads);
+
+    EdgeDetection edgeDetection(40.0, 80.0, 1.0);
+
+    // call the cannyEdgeDetection function
+    auto start = std::chrono::high_resolution_clock::now();
+    
+    edgeDetection.cannyEdgeDetection("img/sentinel2.tif");
+    
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = end - start;
+    
+    std::cout << "Tiempo de ejecución: " << elapsed.count() << " ms\n";
+    return 0;
+}
+
+```
